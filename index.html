@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Bilan journalier</title>
+
+  <!-- CSS externe + cache-buster -->
+  <link rel="stylesheet" href="./style.css?v=3" />
+
+  <!-- CSS critique inline (sécurité : onglets) -->
+  <style>
+    .tab{display:none}
+    .tab.active{display:block}
+    .hidden{display:none}
+  </style>
+
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#4da6ff">
+
+  <!-- icônes -->
+  <link rel="icon" href="/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+</head>
+
+<body>
+
+  <header>
+    <h1>Bilan journalier</h1>
+  </header>
+
+  <main>
+    <!-- Onglet 1 -->
+    <section id="tab1" class="tab active">
+      <div class="date-row">
+        <span id="todayDisplay" class="date-pill">Date : --/--/----</span>
+      </div>
+
+      <div id="startPanel">
+        <button id="startBtn" class="primary" onclick="startQA()">COMMENCER</button>
+      </div>
+
+      <div id="qaPanel" class="hidden">
+        <div id="questionText"></div>
+        <div id="inputSlot"></div>
+        <div>
+          <!-- bouton caché au départ -->
+          <button id="submitAnswer" class="primary" onclick="submitAnswer()" style="display:none;">Valider</button>
+        </div>
+        <div id="progress"></div>
+      </div>
+
+      <div id="donePanel" class="hidden">
+        <p>🔥 C’est tout pour aujourd’hui. Bien joué !</p>
+      </div>
+    </section>
+
+    <!-- Onglet 2 : Historique (préparé pour le graphique) -->
+    <section id="tab2" class="tab">
+      <div class="card">
+        <div class="card-header">
+          <h2>Évolution du poids</h2>
+          <span id="lastWeightBadge" class="chip">—</span>
+        </div>
+        <div class="chart-wrap" style="height:260px">
+          <canvas id="weightChart"></canvas>
+        </div>
+      </div>
+
+       <!-- Carte Sommeil -->
+        <div class="card" style="margin-top:12px">
+          <div class="card-header">
+            <h2>Sommeil (durée)</h2>
+            <span id="lastSleepBadge" class="chip">—</span>
+          </div>
+          <div class="chart-wrap" style="height:260px">
+            <canvas id="sleepChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+
+    <!-- Onglet 3 -->
+    <section id="tab3" class="tab">
+      <p class="note">Ping ton Apps Script puis regarde la réponse ci-dessous.</p>
+      <button id="ping" class="primary" onclick="pingScript()">Tester la connexion</button>
+      <pre id="pingResult"></pre>
+    </section>
+
+    <section>
+      <p class="note">Diagnostic : <span id="diag" class="ok">JS chargé</span></p>
+    </section>
+  </main>
+
+  <!-- Barre d’onglets en bas -->
+  <nav class="bottom-nav">
+    <button type="button" class="tab-btn active" data-tab="tab1"
+      onclick="switchTab('tab1', this)">Accueil</button>
+    <button type="button" class="tab-btn" data-tab="tab2"
+      onclick="switchTab('tab2', this)">Historique</button>
+    <button type="button" class="tab-btn" data-tab="tab3"
+      onclick="switchTab('tab3', this)">Paramètres</button>
+  </nav>
+
+  <!-- Scripts (Chart.js avant script.js) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="./script.js?v=3"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      // Chemin relatif => plus robuste sur Replit
+      navigator.serviceWorker.register('sw.js').then(reg => {
+        console.log('✅ Service Worker enregistré', reg);
+      }).catch(err => {
+        console.warn('❌ Service Worker erreur', err);
+      });
+    }
+  </script>
+</body>
+</html>
