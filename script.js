@@ -20,7 +20,8 @@ var CLIENT_SHEETS = {
 
     if (id){
       const key = id.toLowerCase();
-      SHEET_TAB = CLIENT_SHEETS[key] || id;
+      // Multi-clients = 1 fichier par client, onglet identique "Journal":
+      SHEET_TAB = CLIENT_SHEETS[key] || SHEET_TAB; // on garde "Journal" par défaut
       localStorage.setItem('client_id', id);
     }
 
@@ -260,6 +261,28 @@ window.pingScript = pingScript;
 logDiag('JS chargé', true);
 document.addEventListener('DOMContentLoaded', refreshDateBadge);
 
+// ───────── Sous-onglets onglet 2 ─────────
+function openTab2View(name){
+  // Masquer le menu et les vues
+  document.getElementById('tab2-menu')?.classList.add('hidden');
+  document.getElementById('tab2-sleep')?.classList.add('hidden');
+  document.getElementById('tab2-weight')?.classList.add('hidden');
+
+  // Afficher la vue demandée
+  const target = document.getElementById('tab2-' + name);
+  if (target) target.classList.remove('hidden');
+
+  // Lazy-load : ne charge le graphe que quand la vue est ouverte
+  if (name === 'sleep')  loadSleepChart();
+  if (name === 'weight') loadWeightChart();
+}
+
+function backFromTab2(){
+  document.getElementById('tab2-menu')?.classList.remove('hidden');
+  document.getElementById('tab2-sleep')?.classList.add('hidden');
+  document.getElementById('tab2-weight')?.classList.add('hidden');
+}
+
 // ───────── Graphique poids ─────────
 let weightChart = null;
 
@@ -415,7 +438,7 @@ function renderSleepChart(points){
   });
 }
 
-// ───────── Charger les graphes automatiquement quand on va sur l’onglet Historique ─────────
+// ───────── Gestion des sous-onglets + lazy-load des graphes ─────────
 (function(){
   const baseSwitch = window.switchTab || function(targetId, btn){
     document.querySelector('.tab-btn.active')?.classList.remove('active');
@@ -426,21 +449,16 @@ function renderSleepChart(points){
 
   window.switchTab = function(targetId, btn){
     baseSwitch(targetId, btn);
+    // On ne charge plus les graphes immédiatement
     if (targetId === 'tab2') {
-      loadWeightChart();
-      loadSleepChart();
+      const sleepOpen  = !document.getElementById('tab2-sleep')?.classList.contains('hidden');
+      const weightOpen = !document.getElementById('tab2-weight')?.classList.contains('hidden');
+      if (sleepOpen)  loadSleepChart();
+      if (weightOpen) loadWeightChart();
     }
   };
-
-  // Si l’onglet 2 est déjà actif au chargement, on charge quand même les deux graphes
-  document.addEventListener('DOMContentLoaded', ()=>{
-    const active = document.querySelector('.tab-btn.active');
-    if ((active && active.dataset.tab === 'tab2') || document.getElementById('tab2')?.classList.contains('active')){
-      loadWeightChart();
-      loadSleepChart();
-    }
-  });
 })();
+
 
 // Service Worker
 if ("serviceWorker" in navigator) {
