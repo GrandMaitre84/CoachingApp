@@ -6,23 +6,27 @@
   <title>Bilan journalier</title>
 
   <!-- CSS externe + cache-buster -->
-  <link rel="stylesheet" href="./style.css?v=3" />
+  <link rel="stylesheet" href="./style.css?v=7" />
 
   <!-- CSS critique inline (sécurité : onglets) -->
   <style>
-    .tab{display:none}
-    .tab.active{display:block}
-    .hidden{display:none}
+    .tab { display: none; }
+    .tab.active { display: block; }
+    .hidden { display: none; }
   </style>
 
-  <link rel="manifest" href="/manifest.webmanifest">
+  <!-- Manifest + meta -->
+  <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#4da6ff">
 
-  <!-- icônes -->
-  <link rel="icon" href="/icons/icon-192.png">
-  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <!-- Icônes -->
+  <link rel="icon" href="./icons/icon-192.png">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+  <!-- Script principal + cache-buster -->
+  <script src="./script.js?v=7" defer></script>
 </head>
 
 <body>
@@ -46,7 +50,6 @@
         <div id="questionText"></div>
         <div id="inputSlot"></div>
         <div>
-          <!-- bouton caché au départ -->
           <button id="submitAnswer" class="primary" onclick="submitAnswer()" style="display:none;">Valider</button>
         </div>
         <div id="progress"></div>
@@ -57,20 +60,18 @@
       </div>
     </section>
 
-    <!-- Onglet 2 : Historique (préparé pour le graphique) -->
+    <!-- Onglet 2 -->
     <section id="tab2" class="tab">
-      <div class="card">
-        <div class="card-header">
-          <h2>Évolution du poids</h2>
-          <span id="lastWeightBadge" class="chip">—</span>
-        </div>
-        <div class="chart-wrap" style="height:260px">
-          <canvas id="weightChart"></canvas>
-        </div>
+      <!-- Mini-menu (tuiles) -->
+      <div id="tab2-menu">
+        <button class="tile" onclick="openTab2View('sleep')">😴 SOMMEIL</button>
+        <button class="tile" onclick="openTab2View('weight')">⚖️ POIDS</button>
       </div>
 
-       <!-- Carte Sommeil -->
-        <div class="card" style="margin-top:12px">
+      <!-- Vue SOMMEIL (cachée au départ) -->
+      <div id="tab2-sleep" class="hidden">
+        <button class="back" onclick="backFromTab2()">← Retour</button>
+        <div class="card">
           <div class="card-header">
             <h2>Sommeil (durée)</h2>
             <span id="lastSleepBadge" class="chip">—</span>
@@ -79,8 +80,22 @@
             <canvas id="sleepChart"></canvas>
           </div>
         </div>
-      </section>
+      </div>
 
+      <!-- Vue POIDS (cachée au départ) -->
+      <div id="tab2-weight" class="hidden">
+        <button class="back" onclick="backFromTab2()">← Retour</button>
+        <div class="card">
+          <div class="card-header">
+            <h2>Évolution du poids</h2>
+            <span id="lastWeightBadge" class="chip">—</span>
+          </div>
+          <div class="chart-wrap" style="height:260px">
+            <canvas id="weightChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- Onglet 3 -->
     <section id="tab3" class="tab">
@@ -94,28 +109,41 @@
     </section>
   </main>
 
-  <!-- Barre d’onglets en bas -->
+  <!-- Barre de navigation -->
   <nav class="bottom-nav">
-    <button type="button" class="tab-btn active" data-tab="tab1"
-      onclick="switchTab('tab1', this)">Accueil</button>
-    <button type="button" class="tab-btn" data-tab="tab2"
-      onclick="switchTab('tab2', this)">Historique</button>
-    <button type="button" class="tab-btn" data-tab="tab3"
-      onclick="switchTab('tab3', this)">Paramètres</button>
+    <button type="button" class="tab-btn active" data-tab="tab1" onclick="switchTab('tab1', this)">Accueil</button>
+    <button type="button" class="tab-btn" data-tab="tab2" onclick="switchTab('tab2', this)">Historique</button>
+    <button type="button" class="tab-btn" data-tab="tab3" onclick="switchTab('tab3', this)">Paramètres</button>
   </nav>
 
-  <!-- Scripts (Chart.js avant script.js) -->
+  <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="./script.js?v=3"></script>
+
+  <!-- Service Worker -->
   <script>
     if ('serviceWorker' in navigator) {
-      // Chemin relatif => plus robuste sur Replit
-      navigator.serviceWorker.register('sw.js').then(reg => {
-        console.log('✅ Service Worker enregistré', reg);
-      }).catch(err => {
-        console.warn('❌ Service Worker erreur', err);
-      });
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('✅ Service Worker enregistré', reg))
+        .catch(err => console.warn('❌ Service Worker erreur', err));
     }
   </script>
+
+  <script>
+  if ('serviceWorker' in navigator) {
+    // ⚠️ Mettez à jour ce numéro à chaque release
+    const SW_VERSION = 'v7';
+    navigator.serviceWorker.register(`./sw.js?${SW_VERSION}`).then(reg => {
+      setInterval(() => reg.update(), 60 * 60 * 1000);
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (refreshing) return;
+        refreshing = true;
+        location.reload();
+      });
+    });
+  }
+  </script>
+
+
 </body>
 </html>
