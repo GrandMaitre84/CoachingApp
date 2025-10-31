@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Bilan journalier</title>
+  
 
   <!-- CSS externe + cache-buster -->
   <link rel="stylesheet" href="./style.css?v=7" />
@@ -31,9 +31,6 @@
 
 <body>
 
-  <header>
-    <h1>Bilan journalier</h1>
-  </header>
 
   <main>
     <!-- Onglet 1 -->
@@ -60,42 +57,95 @@
       </div>
     </section>
 
-    <!-- Onglet 2 -->
+    <!-- Onglet 2 : menu -->
     <section id="tab2" class="tab">
-      <!-- Mini-menu (tuiles) -->
-      <div id="tab2-menu">
-        <button class="tile" onclick="openTab2View('sleep')">😴 SOMMEIL</button>
-        <button class="tile" onclick="openTab2View('weight')">⚖️ POIDS</button>
+      <h2 id="tab2-title" class="section-title">💫 Mon suivi</h2>
+      <div id="tab2-menu" class="dashboard-grid">
+        <button class="tile"
+          onclick="switchTab('tab2-sleep', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">
+          😴 SOMMEIL
+        </button>
+        <button class="tile"
+          onclick="switchTab('tab2-weight', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">
+          ⚖️ POIDS
+        </button>
+        <button class="tile"
+          onclick="switchTab('tab2-steps', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">
+          🦶 PAS
+        </button>
+        <button class="tile"
+          onclick="switchTab('tab2-nutrition', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">
+          🍽️ NUTRITION
+        </button>
       </div>
+    </section>
 
-      <!-- Vue SOMMEIL (cachée au départ) -->
-      <div id="tab2-sleep" class="hidden">
-        <button class="back" onclick="backFromTab2()">← Retour</button>
-        <div class="card">
-          <div class="card-header">
-            <h2>Sommeil (durée)</h2>
-            <span id="lastSleepBadge" class="chip">—</span>
-          </div>
-          <div class="chart-wrap" style="height:260px">
-            <canvas id="sleepChart"></canvas>
-          </div>
+    
+    <!-- Sous-page : Graphique Sommeil -->
+    <section id="tab2-sleep" class="tab">
+      <button class="back"
+        onclick="switchTab('tab2', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">← Retour</button>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>Sommeil (durée)</h2>
+          <span id="lastSleepBadge" class="chip">—</span>
         </div>
-      </div>
-
-      <!-- Vue POIDS (cachée au départ) -->
-      <div id="tab2-weight" class="hidden">
-        <button class="back" onclick="backFromTab2()">← Retour</button>
-        <div class="card">
-          <div class="card-header">
-            <h2>Évolution du poids</h2>
-            <span id="lastWeightBadge" class="chip">—</span>
-          </div>
-          <div class="chart-wrap" style="height:260px">
-            <canvas id="weightChart"></canvas>
-          </div>
+        <div class="chart-wrap" style="height:260px">
+          <canvas id="sleepChart"></canvas>
         </div>
       </div>
     </section>
+
+    <!-- Sous-page : Graphique Poids -->
+    <section id="tab2-weight" class="tab">
+      <button class="back"
+        onclick="switchTab('tab2', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">← Retour</button>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>Évolution du poids</h2>
+          <span id="lastWeightBadge" class="chip">—</span>
+        </div>
+        <div class="chart-wrap" style="height:260px">
+          <canvas id="weightChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sous-page : Graphique Pas -->
+    <section id="tab2-steps" class="tab">
+      <button class="back"
+        onclick="switchTab('tab2', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">← Retour</button>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>Nombre de pas</h2>
+          <span id="lastStepsBadge" class="chip">—</span>
+        </div>
+        <div class="chart-wrap" style="height:260px">
+          <canvas id="stepsChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sous-page : Nutrition -->
+    <section id="tab2-nutrition" class="tab hidden">
+      <button class="back"
+        onclick="switchTab('tab2', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">← Retour</button>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>Programme nutrition</h2>
+        </div>
+
+        <!-- Contenu injecté en JS : table / cartes repas -->
+        <div id="nutriContent" class="nutri-content">
+          <p class="note">Chargement…</p>
+        </div>
+      </div>
+    </section>
+
 
     <!-- Onglet 3 -->
     <section id="tab3" class="tab">
@@ -112,7 +162,7 @@
   <!-- Barre de navigation -->
   <nav class="bottom-nav">
     <button type="button" class="tab-btn active" data-tab="tab1" onclick="switchTab('tab1', this)">Accueil</button>
-    <button type="button" class="tab-btn" data-tab="tab2" onclick="switchTab('tab2', this)">Historique</button>
+    <button type="button" class="tab-btn" data-tab="tab2" onclick="switchTab('tab2', this)">Suivi</button>
     <button type="button" class="tab-btn" data-tab="tab3" onclick="switchTab('tab3', this)">Paramètres</button>
   </nav>
 
@@ -144,6 +194,13 @@
   }
   </script>
 
+  <!--
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+  </script>
+  -->
 
 </body>
 </html>
