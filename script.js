@@ -438,7 +438,280 @@ function renderSleepChart(points){
   });
 }
 
-// ───────── Gestion des sous-onglets + lazy-load des graphes ─────────
+// ───────── Graphique pas (barres) ─────────
+let stepsChart = null;
+
+async function loadStepsChart(){
+  try{
+    const clientId = (window.__CLIENT_ID__ || '').trim();
+    const url = GAS_URL + '?action=steps'
+      + (SHEET_TAB ? ('&sheet=' + encodeURIComponent(SHEET_TAB)) : '')
+      + (clientId ? ('&id=' + encodeURIComponent(clientId)) : '');
+    const res = await fetch(url);
+    let data = [];
+    if (res.ok) {
+      const json = await res.json();
+      if (json && json.ok && Array.isArray(json.data)) data = json.data;
+    }
+    renderStepsChart(data);
+  }catch(err){
+    console.error('loadStepsChart error:', err);
+    renderStepsChart([]);
+  }
+}
+
+function renderStepsChart(points){
+  const badge  = document.getElementById('lastStepsBadge');
+  const canvas = document.getElementById('stepsChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  // aucune donnée -> badge vide + canvas nettoyé
+  if (!points || !points.length){
+    if (badge) badge.textContent = '—';
+    if (stepsChart){ stepsChart.destroy(); stepsChart = null; }
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    return;
+  }
+
+  const labels = points.map(p => p.date);
+  const values = points.map(p => Number(p.steps || 0));
+
+  if (badge){
+    const last = values[values.length - 1];
+    badge.textContent = `${last.toLocaleString('fr-FR')} pas`;
+  }
+
+  if (stepsChart) stepsChart.destroy();
+  stepsChart = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        borderWidth: 0,
+        barPercentage: 0.8,
+        categoryPercentage: 0.8,
+        backgroundColor: '#10b981' // vert doux; on peut ajuster si tu veux
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false } },
+        y: {
+          beginAtZero: true,
+          ticks: { callback: v => v.toLocaleString('fr-FR') },
+          grid: { color: 'rgba(0,0,0,.08)' }
+        }
+      }
+    }
+  });
+}
+
+// Helper manquant : échappe le HTML pour l'affichage sécurisé
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, m => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[m]));
+}
+
+// ---------- helper pour Nutrition : normaliser les entêtes ----------
+window.normalizeHeaders = window.normalizeHeaders || function(headers){
+  // ex: "Portion (g)" -> "portion_g"
+  return (headers || []).map(h => {
+    if (!h) return "";
+    return String(h)
+      .trim()
+      .toLowerCase()
+      .replace(/[()]/g, "")     // enlève parenthèses
+      .replace(/\s+/g, "_");    // espaces -> _
+  });
+};
+
+
+// ───────── Nutrition : chargement + rendu par repas (cartes) ─────────
+let nutrLoaded = false;
+
+async function loadNutrition(){
+  const box  = document.getElementById('nutriContent');
+  const meta = document.getElementById('nutriMeta');
+  if (!box) return;
+  box.innerHTML = '<p class="note">Chargement…</p>';
+
+  try{
+    const clientId = (window.__CLIENT_ID__ || '').trim();
+    const nutrTab  = 'Nutrition';
+
+    const url = GAS_URL + '?action=nutrition'
+      + '&nsheet=' + encodeURIComponent(nutrTab)
+      + (clientId ? ('&id=' + encodeURIComponent(clientId)) : '');
+
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP '+res.status);
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error || 'Réponse Apps Script invalide');
+
+    const { headers, rows } = json;
+
+    // helpers
+    const headersNorm = normalizeHeaders(headers);
+    const stripAcc = s => String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    const headersAscii = headersNorm.map(stripAcc);
+    const idx = {
+      alim: headersAscii.indexOf('aliments'),
+      portion: headersAscii.findIndex(h => h.startsWith('portion')),
+      kcal: headersAscii.indexOf('calories'),
+      pro: headersAscii.indexOf('proteines'),
+      glu: headersAscii.indexOf('glucides'),
+      lip: headersAscii.indexOf('lipides')
+    };
+    const toNum = v => {
+      const n = Number(String(v??'').replace(',', '.').trim());
+      return Number.isFinite(n) ? n : NaN;
+    };
+    const fmt = n => Number.isFinite(n) ? n.toLocaleString('fr-FR', { maximumFractionDigits: 1 }) : '—';
+
+    // 1) parser lignes -> repas + objectifs
+    const meals = [];
+    let current = { items: [], total: null };
+    let mealIndex = 1;
+    let objectives = null;
+
+    const hasWord = (row, word) =>
+      row.some(c => String(c||'').toUpperCase().includes(word.toUpperCase()));
+
+    for (let i = 0; i < rows.length; i++){
+      const r = rows[i] || [];
+
+      // fin des repas : bloc OBJECTIF
+      if (hasWord(r, 'OBJECTIF')){
+        // format observé : ligne "OBJECTIF", ligne labels, ligne valeurs
+        const vals = rows[i+2] || [];
+        objectives = {
+          kcal: toNum(vals[idx.kcal]),
+          pro:  toNum(vals[idx.pro]),
+          glu:  toNum(vals[idx.glu]),
+          lip:  toNum(vals[idx.lip]),
+        };
+        break;
+      }
+
+      const a = String(r[idx.alim] || '').trim();
+      // ligne Total => clôt le repas
+      if (a.toLowerCase() === 'total'){
+        const tot = {
+          kcal: toNum(r[idx.kcal]),
+          pro:  toNum(r[idx.pro]),
+          glu:  toNum(r[idx.glu]),
+          lip:  toNum(r[idx.lip]),
+        };
+        const hasItems = current.items.length > 0;
+        // on n'ajoute que si repas non vide
+        if (hasItems){
+          current.total = tot;
+          current.name  = `Repas ${mealIndex}`;
+          meals.push(current);
+          mealIndex += 1;
+        }
+        current = { items: [], total: null };
+        continue;
+      }
+
+      // ligne aliment (non vide et pas "Total")
+      if (a && a.toLowerCase() !== 'total'){
+        current.items.push({
+          name: a,
+          portion: toNum(r[idx.portion]),
+          kcal: toNum(r[idx.kcal]),
+          pro:  toNum(r[idx.pro]),
+          glu:  toNum(r[idx.glu]),
+          lip:  toNum(r[idx.lip]),
+        });
+      }
+    }
+
+    // 2) rendu HTML
+    let html = '';
+    if (meals.length === 0 && !objectives){
+      html = '<p class="note">Aucun repas défini pour le moment.</p>';
+    } else {
+      meals.forEach(m => {
+        html += `
+          <div class="meal-card">
+            <div class="meal-header">
+              <h3>${escapeHtml(m.name)}</h3>
+            </div>
+
+            <div class="meal-body">
+              ${m.items.map(it => `
+                <div class="meal-row">
+                  <div class="food">
+                    <div class="food-name">${escapeHtml(it.name)}</div>
+                    <div class="food-portion">${Number.isFinite(it.portion) ? fmt(it.portion) : '—'} g</div>
+                  </div>
+                  <div class="macros">
+                    <span class="mc-kcal">${fmt(it.kcal)} kcal</span>
+                    <span class="mc-pro">${fmt(it.pro)}P</span>
+                    <span class="mc-glu">${fmt(it.glu)}G</span>
+                    <span class="mc-lip">${fmt(it.lip)}L</span>
+                  </div>
+                </div>`).join('')}
+            </div>
+
+            ${m.total ? `
+              <div class="meal-total below">
+                <span class="pill">
+                  ⚡ ${fmt(m.total.kcal)}<br><small>kcal</small>
+                </span>
+                <span class="pill">
+                  🥩 ${fmt(m.total.pro)}<br><small>P</small>
+                </span>
+                <span class="pill">
+                  🍞 ${fmt(m.total.glu)}<br><small>G</small>
+                </span>
+                <span class="pill">
+                  🧈 ${fmt(m.total.lip)}<br><small>L</small>
+                </span>
+              </div>` : ''
+            }
+
+          </div>`;
+      });
+
+      if (objectives){
+        html += `
+          <div class="meal-card objectives">
+            <div class="meal-header">
+              <h3>🎯 Objectifs quotidiens</h3>
+            </div>
+            <div class="obj-grid">
+              <div class="obj"><div class="lbl">Calories</div><div class="val">${fmt(objectives.kcal)}</div></div>
+              <div class="obj"><div class="lbl">Protéines</div><div class="val">${fmt(objectives.pro)} g</div></div>
+              <div class="obj"><div class="lbl">Glucides</div><div class="val">${fmt(objectives.glu)} g</div></div>
+              <div class="obj"><div class="lbl">Lipides</div><div class="val">${fmt(objectives.lip)} g</div></div>
+            </div>
+          </div>`;
+      }
+    }
+
+
+    box.innerHTML = html;
+    if (meta) meta.textContent = `Nutrition · ${rows?.length || 0} lignes`;
+    nutrLoaded = true;
+
+  }catch(err){
+    console.error('loadNutrition error:', err);
+    box.innerHTML = `<p class="err">Erreur nutrition : ${String(err.message || err)}</p>`;
+  }
+}
+
+
+
+
+// ───────── Navigation + lazy-load des graphes (sous-pages de l’onglet 2) ─────────
 (function(){
   const baseSwitch = window.switchTab || function(targetId, btn){
     document.querySelector('.tab-btn.active')?.classList.remove('active');
@@ -449,13 +722,11 @@ function renderSleepChart(points){
 
   window.switchTab = function(targetId, btn){
     baseSwitch(targetId, btn);
-    // On ne charge plus les graphes immédiatement
-    if (targetId === 'tab2') {
-      const sleepOpen  = !document.getElementById('tab2-sleep')?.classList.contains('hidden');
-      const weightOpen = !document.getElementById('tab2-weight')?.classList.contains('hidden');
-      if (sleepOpen)  loadSleepChart();
-      if (weightOpen) loadWeightChart();
-    }
+    if (targetId === 'tab2-weight') loadWeightChart();
+    if (targetId === 'tab2-sleep')  loadSleepChart();
+    if (targetId === 'tab2-steps')  loadStepsChart();
+    if (targetId === 'tab2-nutrition')  loadNutrition();
+    // Sur 'tab2' (menu), on ne charge rien.
   };
 })();
 
