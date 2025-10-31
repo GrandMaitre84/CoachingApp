@@ -166,3 +166,195 @@ pre{
   margin-bottom:12px; background:#f1f5fb; border:1px solid var(--line);
   padding:10px 12px; border-radius:12px; font-weight:600; cursor:pointer;
 }
+
+/* === Titre joli pour l’onglet Historique (#tab2) === */
+#tab2 h2.section-title,
+#tab2-title {
+  all: unset;                 /* on annule tous les styles par défaut */
+  display: block;             /* puis on remet ce qu'on veut */
+  text-align: center;
+  margin: 18px 0 20px;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--primary) !important;
+  text-shadow: 0 1px 3px rgba(0,0,0,.1);
+  letter-spacing: 0.5px;
+}
+
+/* Nutrition — cartes repas */
+.meal-card{
+  background: var(--surface);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:12px;
+  box-shadow:0 8px 20px rgba(0,0,0,.05);
+  margin-bottom:12px;
+}
+
+
+.meal-header{
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  margin-bottom:8px;
+}
+.meal-header h3{ margin:0; font-size:16px; font-weight:800; color:var(--text); }
+
+.meal-total{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:10px; /* ← espace avant le total */
+}
+
+.meal-body{ display:flex; flex-direction:column; gap:8px; }
+.meal-row{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px; border:1px solid var(--line); border-radius:10px; background:#f9fafc;
+}
+.food{ display:flex; flex-direction:column; }
+.food-name{ font-weight:700; }
+.food-portion{ font-size:12px; color:var(--muted); }
+
+.macros{ display:flex; gap:6px; font-weight:600; }
+.macros span{ display:inline-block; min-width:42px; text-align:right; font-size:13px; }
+
+/* Objectifs grid */
+.obj-grid{
+  display:grid; grid-template-columns:1fr 1fr; gap:8px;
+}
+.obj{ background:#f9fafc; border:1px solid var(--line); border-radius:10px; padding:8px; }
+.obj .lbl{ font-size:12px; color:var(--muted); }
+.obj .val{ font-size:16px; font-weight:800; }
+
+/* Bloc total nutrition amélioré */
+.meal-total {
+  display: flex;
+  justify-content: center;
+  flex-wrap: nowrap;
+  gap: 0; /* on va gérer via les bordures */
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  margin-top: 10px;
+}
+
+/* Chaque macro */
+.meal-total .pill {
+  background: #f8fbff;
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 0; /* carré pour un look tableau clean */
+  border: none;
+  min-width: 70px;
+  text-align: center;
+  font-weight: 700;
+}
+
+/* Bordures verticales entre macros */
+.meal-total .pill:not(:last-child) {
+  border-right: 1px solid var(--line);
+}
+
+/* Arrondir les extrémités pour un look "capsule" */
+.meal-total .pill:first-child {
+  border-radius: 8px 0 0 8px;
+}
+
+.meal-total .pill:last-child {
+  border-radius: 0 8px 8px 0;
+}
+
+/* Centrer le titre de la section nutrition */
+.card-header {
+  justify-content: center !important;
+}
+
+/* Centrer le titre "Objectifs quotidiens" */
+.meal-card.objectives .meal-header {
+  justify-content: center !important;
+}
+
+/* Grille 2 colonnes propre pour le menu de l’onglet 2 */
+#tab2-menu.dashboard-grid{
+  display:grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap:14px;
+  width:100%;
+}
+
+/* Cases identiques (largeur & hauteur) */
+#tab2-menu.dashboard-grid .tile{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  width:100%;
+  min-height:100px;      /* force la même hauteur visuelle */
+  margin:0;              /* évite des écarts inattendus */
+  border-radius:12px;
+  font-weight:700;
+}
+
+/* Emoji + texte bien centrés */
+#tab2-menu.dashboard-grid .tile > * {
+  pointer-events:none;   /* clic sur toute la tuile */
+}
+
+/* Couleurs douces alternées pour les blocs repas */
+.meal-card {
+  background: var(--surface);
+  transition: background 0.2s ease;
+}
+
+/* 1 bloc sur 2 légèrement coloré */
+.meal-card:nth-child(odd):not(.objectives) {
+  background: #a0b2ca; /* bleu très clair */
+}
+
+.meal-card:nth-child(even):not(.objectives) {
+  background: #a990ad; /* blanc pur */
+}
+
+/* Optionnel : objectives avec une teinte spéciale */
+.meal-card.objectives {
+  background: #95f4e9; /* vert très léger */
+}
+
+/* Centrage des totaux par repas */
+.meal-total {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  text-align: center;
+}
+
+.meal-total .pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 4px;
+  font-size: 13px;
+  width: 70px; /* force largeur uniforme */
+}
+
+.meal-total .pill small {
+  font-size: 11px;
+  opacity: .75;
+  margin-top: -2px;
+}
+
+.meal-card h3 {
+  text-align: center;
+  width: 100%;
+  margin-bottom: 10px;
+  font-weight: 800;
+}
+
+.obj {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
