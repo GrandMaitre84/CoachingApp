@@ -39,9 +39,20 @@
         <span id="todayDisplay" class="date-pill">Date : --/--/----</span>
       </div>
 
-      <div id="startPanel">
+      <!-- Nouveau bouton principal -->
+      <div id="bilanPanel">
+        <button class="primary" onclick="openDailyCheckin()">BILAN DU JOUR</button>
+        <button id="profileBtn" class="primary" onclick="openProfile()">PROFILE</button>
+      </div>
+
+
+
+      <!-- Ancien bloc de démarrage (on le cache au début) -->
+      <div id="startPanel" class="hidden">
+        <button id="backHomeBtn" class="secondary" onclick="backToHome()">← Retour</button>
         <button id="startBtn" class="primary" onclick="startQA()">COMMENCER</button>
       </div>
+
 
       <div id="qaPanel" class="hidden">
         <div id="questionText"></div>
@@ -55,7 +66,61 @@
       <div id="donePanel" class="hidden">
         <p>🔥 C’est tout pour aujourd’hui. Bien joué !</p>
       </div>
-    </section>
+
+      <!-- Panneau PROFIL (caché au départ) -->
+      <div id="profilePanel" class="hidden">
+        <button class="secondary" onclick="closeProfile()">← Retour</button>
+
+        <div class="card" style="margin-top:12px;">
+          <div class="card-header">
+            <h2>Mon profil</h2>
+          </div>
+
+          <!-- Nom centré sous le titre -->
+          <div style="text-align:center; margin-top:4px; margin-bottom:12px;">
+            <span id="profileNameBadge" class="chip">—</span>
+          </div>
+
+
+          <div style="text-align:center; margin-top:12px;">
+            <strong>Âge</strong>
+            <div id="profileAge" style="margin-top:4px;">—</div>
+          </div>
+
+          <div style="text-align:center; margin-top:12px;">
+            <strong>Date début coaching</strong>
+            <div id="profileStartDate" style="margin-top:4px;">—</div>
+          </div>
+
+          <div style="text-align:center; margin-top:12px;">
+            <strong>Score santé</strong>
+            <div id="profileHealthScore" style="margin-top:4px;">—</div>
+          </div>
+
+          <div style="text-align:center; margin-top:20px;">
+            <strong>Points santé</strong>
+
+            <div id="healthBarContainer"
+                 style="width:100%; background:#eee; height:12px; border-radius:6px; margin-top:8px;">
+              <div id="healthBar"
+                   style="height:12px; width:0%; background:#4CAF50; border-radius:6px;"></div>
+            </div>
+
+            <div id="profileHealthPoints" style="margin-top:6px;">—</div>
+          </div>
+
+
+            <!-- Valeur affichée en dessous -->
+            <div id="profileHealthPoints" style="margin-top:6px;">—</div>
+          </div>
+
+
+        </div>
+      </div>
+      </section>
+
+
+
 
     <!-- Onglet 2 : menu -->
     <section id="tab2" class="tab">
@@ -130,19 +195,23 @@
     </section>
 
     <!-- Sous-page : Nutrition -->
-    <section id="tab2-nutrition" class="tab hidden">
+    <section id="tab2-nutrition" class="tab">
       <button class="back"
-        onclick="switchTab('tab2', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">← Retour</button>
+        onclick="switchTab('tab2', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">
+        ← Retour
+      </button>
 
       <div class="card">
         <div class="card-header">
           <h2>Programme nutrition</h2>
+          <span id="nutriMeta" class="chip">—</span>
         </div>
 
-        <!-- Contenu injecté en JS : table / cartes repas -->
-        <div id="nutriContent" class="nutri-content">
-          <p class="note">Chargement…</p>
-        </div>
+        <!-- 🆕 boutons Jour 1 / Jour 2 / ... -->
+        <div id="nutriDays" class="nutri-days"></div>
+
+        <!-- Contenu des repas -->
+        <div id="nutriContent"></div>
       </div>
     </section>
 
