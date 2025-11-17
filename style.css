@@ -200,18 +200,29 @@ pre{
   padding:10px 12px; border-radius:12px; font-weight:600; cursor:pointer;
 }
 
-/* === Titre joli pour l’onglet Historique (#tab2) === */
-#tab2 h2.section-title,
+/* === Titre onglet 2 "Mon suivi" — bandeau full width arrondi === */
 #tab2-title {
-  all: unset;                 /* on annule tous les styles par défaut */
-  display: block;             /* puis on remet ce qu'on veut */
+  width: 100%;
   text-align: center;
-  margin: 18px 0 20px;
-  font-size: 1.6rem;
+
+  font-size: 20px;
   font-weight: 800;
-  color: var(--primary) !important;
-  text-shadow: 0 1px 3px rgba(0,0,0,.1);
-  letter-spacing: 0.5px;
+
+  margin: 0 0 16px 0;   /* ✔ ajoute un espace en dessous */
+  padding: 14px 0;
+
+  background: #e8f0ff;
+  color: #1e3a8a;
+
+  border-bottom: 1px solid #d0ddff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+
+  border-radius: 12px;   /* ✔ arrondit les angles */
 }
 
 /* Nutrition — cartes repas */
@@ -425,4 +436,181 @@ pre{
   margin-top: 12px;
 }
 
+/* ================= PROFIL ================= */
 
+.profile-card-wrapper {
+  margin-top: 12px;
+  padding: 16px;
+}
+
+.profile-header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.profile-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.profile-name {
+  margin-top: 6px;
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: #f0f4ff;
+  border: 1px solid var(--line);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+/* Grille de cartes */
+.profile-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Chaque carte */
+.profile-card {
+  background: #f9fafc;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Label en haut (petit) */
+.profile-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+/* Valeur en gros */
+.profile-value {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+/* Bouton retour dans le profil */
+.profile-back-btn {
+  margin-top: 16px;
+  width: 100%;
+}
+
+/* === PROFIL compact === */
+
+.profile-card {
+  margin-top: 12px;
+  padding: 14px;
+}
+
+/* Titre "Mon profil" */
+.profile-title {
+  margin: 0;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+/* Ligne du nom sous le titre */
+.profile-name-row,
+.profile-name {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+  margin-bottom: 10px;
+}
+
+/* Grille des petits blocs (2 colonnes) */
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* Chaque petit bloc d'info */
+.profile-item {
+  background: #eef6ff;              /* bleu très léger */
+  border: 1px solid #d6e8ff;        /* bordure douce */
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 0;
+  text-align: center;               /* centre tout le contenu */
+}
+
+.profile-label {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+.profile-value {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.profile-value.small {
+  font-size: 13px;
+}
+
+/* === Barre de points santé sous les blocs === */
+
+/* Wrapper pour centrer la barre */
+.profile-health-bar-wrap {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+}
+
+/* Conteneur de la barre : largeur ≈ 2 blocs */
+.health-bar-container {
+  width: 70%;
+  height: 14px;
+  background: #e5e7eb;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+/* Barre de remplissage */
+.health-bar {
+  height: 100%;
+  width: 0%; /* mis à jour en JS */
+  background: linear-gradient(90deg, #4ade80, #22c55e, #15803d);
+  border-radius: 20px;
+  transition: width 0.5s ease-in-out;
+}
+
+/* ==== TITRE SECTION (ex: Mon suivi) ==== */
+.section-title {
+  text-align: center;
+  font-size: 20px;
+  font-weight: 800;
+  margin: 14px auto 18px;
+  padding: 10px 20px;
+  width: fit-content;
+  background: #f0f5ff;
+  color: #1e3a8a;
+  border: 1px solid #d5e3ff;
+  border-radius: 14px;
+
+  box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.app-version {
+  font-size: 12px;
+  color: #6B7280;
+  text-align: center;
+  margin-top: 10px;
+  margin-bottom: 15px;
+}
