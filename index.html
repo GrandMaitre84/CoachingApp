@@ -71,52 +71,46 @@
       <div id="profilePanel" class="hidden">
         <button class="secondary" onclick="closeProfile()">← Retour</button>
 
-        <div class="card" style="margin-top:12px;">
-          <div class="card-header">
-            <h2>Mon profil</h2>
-          </div>
+        <div class="card profile-card">
+          <h2 class="profile-title">Mon profil</h2>
 
-          <!-- Nom centré sous le titre -->
-          <div style="text-align:center; margin-top:4px; margin-bottom:12px;">
+          <div class="profile-name-row">
             <span id="profileNameBadge" class="chip">—</span>
           </div>
 
-
-          <div style="text-align:center; margin-top:12px;">
-            <strong>Âge</strong>
-            <div id="profileAge" style="margin-top:4px;">—</div>
-          </div>
-
-          <div style="text-align:center; margin-top:12px;">
-            <strong>Date début coaching</strong>
-            <div id="profileStartDate" style="margin-top:4px;">—</div>
-          </div>
-
-          <div style="text-align:center; margin-top:12px;">
-            <strong>Score santé</strong>
-            <div id="profileHealthScore" style="margin-top:4px;">—</div>
-          </div>
-
-          <div style="text-align:center; margin-top:20px;">
-            <strong>Points santé</strong>
-
-            <div id="healthBarContainer"
-                 style="width:100%; background:#eee; height:12px; border-radius:6px; margin-top:8px;">
-              <div id="healthBar"
-                   style="height:12px; width:0%; background:#4CAF50; border-radius:6px;"></div>
+          <div class="profile-grid">
+            <div class="profile-item">
+              <div class="profile-label">Âge</div>
+              <div id="profileAge" class="profile-value">—</div>
             </div>
 
-            <div id="profileHealthPoints" style="margin-top:6px;">—</div>
+            <div class="profile-item">
+              <div class="profile-label">Début du coaching</div>
+              <div id="profileStartDate" class="profile-value">—</div>
+            </div>
+
+            <div class="profile-item">
+              <div class="profile-label">Score santé</div>
+              <div id="profileHealthScore" class="profile-value">—</div>
+            </div>
+
+            <!-- ⚠️ Bloc Points santé RESTE dans la grille -->
+            <div class="profile-item">
+              <div class="profile-label">Points santé</div>
+              <div id="profileHealthPoints" class="profile-value">— / 100</div>
+            </div>
           </div>
 
-
-            <!-- Valeur affichée en dessous -->
-            <div id="profileHealthPoints" style="margin-top:6px;">—</div>
+          <!-- ✅ Barre de points santé sous les blocs, centrée -->
+          <div class="profile-health-bar-wrap">
+            <div class="health-bar-container">
+              <div id="healthBar" class="health-bar"></div>
+            </div>
           </div>
-
 
         </div>
       </div>
+
       </section>
 
 
@@ -124,7 +118,7 @@
 
     <!-- Onglet 2 : menu -->
     <section id="tab2" class="tab">
-      <h2 id="tab2-title" class="section-title">💫 Mon suivi</h2>
+      <h2 id="tab2-title" class="section-title">Mon suivi</h2>
       <div id="tab2-menu" class="dashboard-grid">
         <button class="tile"
           onclick="switchTab('tab2-sleep', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">
@@ -223,9 +217,8 @@
       <pre id="pingResult"></pre>
     </section>
 
-    <section>
-      <p class="note">Diagnostic : <span id="diag" class="ok">JS chargé</span></p>
-    </section>
+    <div id="appVersion" class="app-version">Version : 0.0.1</div>
+
   </main>
 
   <!-- Barre de navigation -->
