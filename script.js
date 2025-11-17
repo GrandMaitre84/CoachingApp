@@ -75,31 +75,53 @@ async function loadProfileData() {
 
     const p = json.data || {};
 
+    // 🔹 On supporte plusieurs IDs possibles (anciennes et nouvelles versions HTML)
     const nameEl   = document.getElementById('profileNameBadge');
-    const ageEl    = document.getElementById('profileAge');
-    const startEl  = document.getElementById('profileStartDate');
-    const scoreEl  = document.getElementById('profileHealthScore');
-    const ptsEl    = document.getElementById('profileHealthPoints');
-    const barEl    = document.getElementById('healthBar');
 
+    const ageEl    =
+      document.getElementById('profileAgeValue') ||
+      document.getElementById('profileAge');
+
+    const startEl  =
+      document.getElementById('profileStartDateValue') ||
+      document.getElementById('profileStartDate');
+
+    const scoreEl  =
+      document.getElementById('profileHealthScoreValue') ||
+      document.getElementById('profileHealthScore') ||
+      document.getElementById('profileScore');
+
+    const ptsTextEl =
+      document.getElementById('profileHealthPoints') ||
+      document.getElementById('profilePoints');
+
+    const barEl = document.getElementById('healthBar');
+
+    // 🔹 Remplissage des champs
     if (nameEl)  nameEl.textContent  = p.name || '—';
     if (ageEl)   ageEl.textContent   =
       (p.age !== undefined && p.age !== null && p.age !== '') ? p.age : '—';
+
     if (startEl) startEl.textContent = formatProfileDateFR(p.startDate);
+
     if (scoreEl) scoreEl.textContent =
       p.healthScore !== undefined && p.healthScore !== '' ? p.healthScore : '—';
-    if (ptsEl)   ptsEl.textContent   =
-      p.healthPoints !== undefined && p.healthPoints !== '' ? p.healthPoints : '—';
 
-    // 🔋 Barre de progression des points santé
+    // 🔹 Points santé : texte "X / 100" + barre
+    let points = null;
+    if (p.healthPoints !== undefined && p.healthPoints !== null && p.healthPoints !== '') {
+      const n = Number(p.healthPoints);
+      if (Number.isFinite(n)) points = n;
+    }
+
+    const clamped = points === null ? 0 : Math.max(0, Math.min(100, points));
+
+    if (ptsTextEl) {
+      ptsTextEl.textContent = points === null ? '— / 100' : clamped + ' / 100';
+    }
+
     if (barEl) {
-      const hpNum = Number(p.healthPoints);
-      if (Number.isFinite(hpNum)) {
-        const percent = Math.max(0, Math.min(100, hpNum)); // borné 0–100
-        barEl.style.width = percent + '%';
-      } else {
-        barEl.style.width = '0%';
-      }
+      barEl.style.width = clamped + '%';
     }
 
     profileLoaded = true;
@@ -109,6 +131,8 @@ async function loadProfileData() {
     if (badge) badge.textContent = 'Erreur profil';
   }
 }
+
+
 
 
 
