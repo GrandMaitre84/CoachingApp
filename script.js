@@ -36,6 +36,81 @@ var CLIENT_SHEETS = {
 var DURATION_AS_TIME_FRACTION = false; // false => "HH:MM", true => fraction de jour (format [h]:mm côté Sheet)
 // ********************************
 
+// ───────── PROFIL : chargement des données depuis Apps Script ─────────
+let profileLoaded = false;
+
+function formatProfileDateFR(raw) {
+  if (!raw) return '—';
+
+  // Si c'est déjà au format JJ/MM/AAAA
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(String(raw))) {
+    return String(raw);
+  }
+
+  // Si c'est un ISO genre "2025-11-14T23:00:00.000Z"
+  try {
+    const d = new Date(raw);
+    if (isNaN(d.getTime())) return String(raw);
+
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
+  } catch (e) {
+    return String(raw);
+  }
+}
+
+async function loadProfileData() {
+  try {
+    const clientId = (window.__CLIENT_ID__ || '').trim();
+    let url = GAS_URL + '?action=profile';
+    if (clientId) url += '&id=' + encodeURIComponent(clientId);
+
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error || 'Réponse Apps Script invalide');
+
+    const p = json.data || {};
+
+    const nameEl   = document.getElementById('profileNameBadge');
+    const ageEl    = document.getElementById('profileAge');
+    const startEl  = document.getElementById('profileStartDate');
+    const scoreEl  = document.getElementById('profileHealthScore');
+    const ptsEl    = document.getElementById('profileHealthPoints');
+    const barEl    = document.getElementById('healthBar');
+
+    if (nameEl)  nameEl.textContent  = p.name || '—';
+    if (ageEl)   ageEl.textContent   =
+      (p.age !== undefined && p.age !== null && p.age !== '') ? p.age : '—';
+    if (startEl) startEl.textContent = formatProfileDateFR(p.startDate);
+    if (scoreEl) scoreEl.textContent =
+      p.healthScore !== undefined && p.healthScore !== '' ? p.healthScore : '—';
+    if (ptsEl)   ptsEl.textContent   =
+      p.healthPoints !== undefined && p.healthPoints !== '' ? p.healthPoints : '—';
+
+    // 🔋 Barre de progression des points santé
+    if (barEl) {
+      const hpNum = Number(p.healthPoints);
+      if (Number.isFinite(hpNum)) {
+        const percent = Math.max(0, Math.min(100, hpNum)); // borné 0–100
+        barEl.style.width = percent + '%';
+      } else {
+        barEl.style.width = '0%';
+      }
+    }
+
+    profileLoaded = true;
+  } catch (err) {
+    console.error('loadProfileData error:', err);
+    const badge = document.getElementById('profileNameBadge');
+    if (badge) badge.textContent = 'Erreur profil';
+  }
+}
+
+
 
 // Questions
 var QUESTIONS = [
@@ -105,6 +180,55 @@ function buildInput(q){
   el.required=true;
   return el;
 }
+
+function openDailyCheckin() {
+  // Cache tout le panneau (BILAN + PROFILE)
+  document.getElementById('bilanPanel').classList.add('hidden');
+
+  // Affiche le bouton "COMMENCER"
+  document.getElementById('startPanel').classList.remove('hidden');
+}
+
+function backToHome() {
+  // Réaffiche le panneau BILAN + PROFILE
+  document.getElementById('bilanPanel')?.classList.remove('hidden');
+  document.getElementById('profileBtn')?.classList.remove('hidden');
+
+  // Cache le panneau "commencer"
+  document.getElementById('startPanel')?.classList.add('hidden');
+}
+
+function openProfile() {
+  // On cache tous les panneaux liés au bilan
+  document.getElementById('bilanPanel')?.classList.add('hidden');
+  document.getElementById('startPanel')?.classList.add('hidden');
+  document.getElementById('qaPanel')?.classList.add('hidden');
+  document.getElementById('donePanel')?.classList.add('hidden');
+
+  // On affiche le panneau profil
+  document.getElementById('profilePanel')?.classList.remove('hidden');
+
+  // On charge les données (une seule fois, sauf si tu veux forcer le refresh)
+  if (!profileLoaded) {
+    loadProfileData();
+  }
+}
+
+function closeProfile() {
+  // On cache le profil
+  document.getElementById('profilePanel')?.classList.add('hidden');
+
+  // On revient à l'écran d'accueil (BILAN + PROFILE)
+  document.getElementById('bilanPanel')?.classList.remove('hidden');
+}
+
+// On expose les fonctions pour les onclick dans le HTML
+window.openProfile  = openProfile;
+window.closeProfile = closeProfile;
+
+
+
+
 
 // ---------- Flow ----------
 function startQA(){
@@ -531,19 +655,120 @@ window.normalizeHeaders = window.normalizeHeaders || function(headers){
   });
 };
 
+// Ouvre la page Nutrition en gérant 1 jour / plusieurs jours
+async function openNutritionPage(){
+  const box  = document.getElementById('nutriContent');
+  const meta = document.getElementById('nutriMeta');
+  const days = document.getElementById('nutriDays'); // conteneur des boutons Jours
+
+  if (!box) return;
+  if (!days) {
+    // Sécurité : s’il n’y a pas de conteneur, on affiche juste la feuille par défaut
+    await loadNutrition('Nutrition');
+    return;
+  }
+
+  box.innerHTML = '<p class="note">Chargement…</p>';
+
+  try {
+    // On charge la liste des onglets Nutrition une seule fois
+    if (!nutrTabsLoaded) {
+      const clientId = (window.__CLIENT_ID__ || '').trim();
+      let url = GAS_URL + '?action=nutrition_tabs';
+      if (clientId) url += '&id=' + encodeURIComponent(clientId);
+
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || 'Réponse Apps Script invalide');
+
+      nutrTabs = Array.isArray(json.tabs) ? json.tabs : [];
+      nutrTabsLoaded = true;
+    }
+
+    // Aucun onglet Nutrition -> message
+    if (!nutrTabs || nutrTabs.length === 0){
+      days.innerHTML = '';
+      box.innerHTML = '<p class="note">Aucun onglet Nutrition trouvé.</p>';
+      if (meta) meta.textContent = '0 jour';
+      return;
+    }
+
+    // Un seul onglet -> pas de boutons "Jour X"
+    if (nutrTabs.length === 1){
+      days.innerHTML = '';
+      if (meta) meta.textContent = '1 jour';
+      await loadNutrition(nutrTabs[0]);
+      return;
+    }
+
+    // Plusieurs onglets -> créer les boutons "Jour 1 / Jour 2 / ..."
+    let html = '';
+    nutrTabs.forEach((name, idx) => {
+      const label = 'Jour ' + (idx + 1);
+      const safe = name.replace(/"/g, '&quot;');
+      html += `
+        <button
+          class="nutri-day-btn"
+          data-sheet="${safe}"
+          onclick="selectNutritionDay('${safe}')">
+          ${label}
+        </button>`;
+    });
+    days.innerHTML = html;
+    if (meta) meta.textContent = nutrTabs.length + ' jours';
+
+    // Sélection par défaut = premier onglet
+    if (nutrTabs[0]) {
+      window.selectNutritionDay(nutrTabs[0]);
+    }
+
+  } catch(err){
+    console.error('openNutritionPage error:', err);
+    box.innerHTML = '<p class="note err">Erreur lors du chargement de la nutrition.</p>';
+    if (meta) meta.textContent = 'Erreur';
+  }
+}
+
+// Fonction globale pour changer de jour
+window.selectNutritionDay = function(sheetName){
+  currentNutritionSheet = sheetName || 'Nutrition';
+
+  // mettre à jour les boutons actifs
+  const btns = document.querySelectorAll('.nutri-day-btn');
+  btns.forEach(btn => {
+    const isActive = btn.dataset.sheet === sheetName;
+    if (isActive) btn.classList.add('active');
+    else         btn.classList.remove('active');
+  });
+
+  // charger le bon onglet
+  loadNutrition(sheetName);
+};
+
 
 // ───────── Nutrition : chargement + rendu par repas (cartes) ─────────
+// Pour gérer plusieurs onglets "Nutrition", "Nutrition 2", etc.
+let nutrTabs = [];
+let nutrTabsLoaded = false;
 let nutrLoaded = false;
+let currentNutritionSheet = 'Nutrition'; // onglet par défaut
 
-async function loadNutrition(){
+async function loadNutrition(sheetName){
   const box  = document.getElementById('nutriContent');
   const meta = document.getElementById('nutriMeta');
   if (!box) return;
+
   box.innerHTML = '<p class="note">Chargement…</p>';
+
+  // Si on appelle loadNutrition('Nutrition 2'), on met à jour l’onglet courant
+  if (sheetName) {
+    currentNutritionSheet = sheetName;
+  }
 
   try{
     const clientId = (window.__CLIENT_ID__ || '').trim();
-    const nutrTab  = 'Nutrition';
+    const nutrTab  = currentNutritionSheet || 'Nutrition';
 
     const url = GAS_URL + '?action=nutrition'
       + '&nsheet=' + encodeURIComponent(nutrTab)
@@ -555,6 +780,9 @@ async function loadNutrition(){
     if (!json.ok) throw new Error(json.error || 'Réponse Apps Script invalide');
 
     const { headers, rows } = json;
+    // ⬅️ à partir d'ici tu gardes TOUT le reste de ton code actuel (helpers, parsing, rendu)
+
+    
 
     // helpers
     const headersNorm = normalizeHeaders(headers);
@@ -725,7 +953,7 @@ async function loadNutrition(){
     if (targetId === 'tab2-weight') loadWeightChart();
     if (targetId === 'tab2-sleep')  loadSleepChart();
     if (targetId === 'tab2-steps')  loadStepsChart();
-    if (targetId === 'tab2-nutrition')  loadNutrition();
+    if (targetId === 'tab2-nutrition') openNutritionPage(); // ⬅️ NOUVEAU
     // Sur 'tab2' (menu), on ne charge rien.
   };
 })();
