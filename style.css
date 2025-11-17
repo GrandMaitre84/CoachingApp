@@ -66,6 +66,39 @@ main{
 }
 .primary:hover{ opacity:.9; }
 
+/* Bouton secondaire (← Retour) */
+.secondary{
+  background:#e5e7eb;
+  color:var(--text);
+  border:1px solid var(--line);
+  padding:14px;
+  border-radius:12px;
+  font-weight:600;
+  width:100%;
+  font-size:16px;
+  cursor:pointer;
+}
+
+/* petit espace sous le bouton retour */
+#backHomeBtn{
+  margin-bottom:10px;
+}
+
+/* Boutons du panneau du jour / profil */
+#bilanPanel{
+  display:flex;
+  flex-direction:column;
+  gap:12px;           /* espace vertical entre "BILAN DU JOUR" et "PROFILE" */
+}
+
+/* Lorsque le JS ajoute la classe .hidden, on masque réellement le panneau */
+#bilanPanel.hidden{
+  display:none !important;
+}
+
+
+
+
 /* Inputs */
 input,select{
   width:100%;
@@ -225,6 +258,35 @@ pre{
 .obj .lbl{ font-size:12px; color:var(--muted); }
 .obj .val{ font-size:16px; font-weight:800; }
 
+/* --- Boutons "Jour X" pour la nutrition --- */
+#nutriDays {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;                 /* espace entre les boutons */
+  margin: 8px 0 14px 0;     /* espace au-dessus / en dessous */
+}
+
+.nutri-day-btn {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 14px;
+  background: #f1f5fb;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  color: var(--text);
+  transition: background .15s ease, color .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+
+/* état sélectionné (Jour actif) */
+.nutri-day-btn.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+  box-shadow: 0 3px 8px rgba(0,0,0,.12);
+}
+
 /* Bloc total nutrition amélioré */
 .meal-total {
   display: flex;
@@ -357,4 +419,10 @@ pre{
   align-items: center;
   text-align: center;
 }
+
+/* Espace vertical entre les boutons BILAN DU JOUR et PROFILE */
+#bilanPanel .primary + .primary {
+  margin-top: 12px;
+}
+
 
