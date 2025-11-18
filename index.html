@@ -41,7 +41,7 @@
 
       <!-- Nouveau bouton principal -->
       <div id="bilanPanel">
-        <button class="primary" onclick="openDailyCheckin()">BILAN DU JOUR</button>
+        <button id="bilanBtn" class="primary" onclick="openDailyCheckin()">BILAN DU JOUR</button>
         <button id="profileBtn" class="primary" onclick="openProfile()">PROFILE</button>
       </div>
 
@@ -54,18 +54,42 @@
       </div>
 
 
-      <div id="qaPanel" class="hidden">
-        <div id="questionText"></div>
-        <div id="inputSlot"></div>
-        <div>
-          <button id="submitAnswer" class="primary" onclick="submitAnswer()" style="display:none;">Valider</button>
+      <!-- Panneau Q&A (questions quotidiennes) -->
+      <div id="qaPanel" class="hidden card question-card">
+        <div class="question-header">
+          <div id="questionStep" class="question-step">Question 1 / 11</div>
+          <div id="questionText" class="question-title">Texte de la question</div>
         </div>
-        <div id="progress"></div>
+
+        <div id="inputSlot" class="question-input"></div>
+
+        <button
+          id="submitAnswer"
+          class="primary question-submit"
+          onclick="submitAnswer()"
+          style="display:none;">
+          Valider
+        </button>
+
+        <div class="question-footer">
+          <div class="question-progress-bar">
+            <!-- ⚠️ ID corrigé ici -->
+            <div id="questionProgressInner" class="question-progress-inner"></div>
+          </div>
+          <div id="progress" class="question-progress-text">
+            Question 1 sur 11
+          </div>
+        </div>
       </div>
 
-      <div id="donePanel" class="hidden">
+      <div id="donePanel" class="hidden card" style="text-align:center; padding:20px;">
         <p>🔥 C’est tout pour aujourd’hui. Bien joué !</p>
+
+        <button class="primary" style="margin-top:15px;" onclick="goToTab(1)">
+          ← Retour à l’accueil
+        </button>
       </div>
+
 
       <!-- Panneau PROFIL (caché au départ) -->
       <div id="profilePanel" class="hidden">
