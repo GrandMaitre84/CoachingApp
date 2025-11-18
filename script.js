@@ -104,8 +104,13 @@ async function loadProfileData() {
 
     if (startEl) startEl.textContent = formatProfileDateFR(p.startDate);
 
-    if (scoreEl) scoreEl.textContent =
-      p.healthScore !== undefined && p.healthScore !== '' ? p.healthScore : '—';
+    if (scoreEl) {
+      const raw = p.healthScore;
+      const txt = String(raw ?? '').trim();   // gère 0, "0", " 0 ", etc.
+
+      scoreEl.textContent = (txt === '') ? '—' : txt;
+    }
+
 
     // 🔹 Points santé : texte "X / 100" + barre
     let points = null;
@@ -206,12 +211,28 @@ function buildInput(q){
 }
 
 function openDailyCheckin() {
-  // Cache tout le panneau (BILAN + PROFILE)
-  document.getElementById('bilanPanel').classList.add('hidden');
+  const today = todayFR();                     // ex : "17/11/2025"
+  const done  = localStorage.getItem("bilan_done");
 
-  // Affiche le bouton "COMMENCER"
+  // 🔒 Si on a déjà fait le bilan aujourd’hui → on bloque
+  if (done === today) {
+    alert("Le bilan du jour a déjà été complété.");
+
+    const btn = document.getElementById('bilanBtn');
+    if (btn) {
+      btn.disabled = true;
+      btn.classList.add('disabled');
+    }
+    return;
+  }
+
+  // 🔓 Sinon : ouverture normale
+  document.getElementById('bilanPanel').classList.add('hidden');
   document.getElementById('startPanel').classList.remove('hidden');
 }
+
+
+
 
 function backToHome() {
   // Réaffiche le panneau BILAN + PROFILE
@@ -273,27 +294,57 @@ function startQA(){
 }
 window.startQA = startQA;
 
-function showQuestion(){
-  if (state.idx >= QUESTIONS.length){ return finishAndSend(); }
+function showQuestion() {
+  const total = QUESTIONS.length;
+
+  // Si on a fini toutes les questions
+  if (state.idx >= total) {
+    const bar = document.getElementById('questionProgressInner');
+    if (bar) bar.style.width = '100%';
+    const progressTextEl = document.getElementById('progress');
+    if (progressTextEl) {
+      progressTextEl.textContent = `Question ${total} sur ${total}`;
+    }
+    return finishAndSend();
+  }
 
   const q = QUESTIONS[state.idx];
-  document.getElementById('questionText').textContent =
-    `${state.idx+1}/${QUESTIONS.length} · ${q.label}`;
 
+  // Titre de la question
+  const titleEl = document.getElementById('questionText');
+  if (titleEl) titleEl.textContent = q.label;
+
+  // Petit texte "Étape X / Y"
+  const stepEl = document.getElementById('questionStep');
+  if (stepEl) stepEl.textContent = `Étape ${state.idx + 1} / ${total}`;
+
+  // Zone input
   const slot = document.getElementById('inputSlot');
-  slot.innerHTML = '';
-  const input = buildInput(q);
-  slot.appendChild(input);
-  input.focus();
+  if (slot) {
+    slot.innerHTML = '';
+    const input = buildInput(q);
+    slot.appendChild(input);
+    input.focus();
+    state.currentInputEl = input;
+  }
 
-  document.getElementById('progress').textContent =
-    `Question ${state.idx+1} sur ${QUESTIONS.length}`;
+  // Texte "Question X sur Y"
+  const progressTextEl = document.getElementById('progress');
+  if (progressTextEl) {
+    progressTextEl.textContent = `Question ${state.idx + 1} sur ${total}`;
+  }
 
-  state.currentInputEl = input;
+  // ✅ Barre de progression
+  const bar = document.getElementById('questionProgressInner');
+  if (bar) {
+    const pct = Math.round((state.idx) / total * 100); // 0% à la Q1, etc.
+    bar.style.width = pct + '%';
+  }
 
   const btn = document.getElementById('submitAnswer');
   if (btn) btn.style.display = 'block';
 }
+
 
 function submitAnswer(){
   const q = QUESTIONS[state.idx];
@@ -328,9 +379,22 @@ function finishAndSend(){
 
   const bulk = Object.keys(state.answers).map(col => ({ col, value: state.answers[col] }));
   sendBulk({ date: state.date, sheet: SHEET_TAB, bulk }, err=>{
-    if (err) alert('Envoi au Google Sheet : ' + err);
+    if (err) {
+      alert('Envoi au Google Sheet : ' + err);
+      return;
+    }
+
+    // ✅ Si l'envoi est OK : on marque le bilan comme fait pour cette date
+    try {
+      localStorage.setItem('bilan_done', '1');        // bilan fait
+      localStorage.setItem('bilan_date', state.date); // ex : "18/11/2025"
+    } catch(e) {
+      console.warn('localStorage error', e);
+    }
   });
 }
+
+
 
 // ---------- réseau ----------
 function sendBulk(payload, cb){
@@ -405,9 +469,25 @@ function pingScript(){
 }
 window.pingScript = pingScript;
 
+function checkBilanStatusAtStartup() {
+  const flag = localStorage.getItem("bilan_done");
+  const btn = document.getElementById('bilanBtn');
+  if (!btn) return;
+
+  // Si déjà fait → on grise et on bloque
+  if (flag === "1") {
+    btn.disabled = true;
+    btn.classList.add('disabled');
+  }
+}
+
 // ---------- init ----------
 logDiag('JS chargé', true);
-document.addEventListener('DOMContentLoaded', refreshDateBadge);
+document.addEventListener('DOMContentLoaded', () => {
+  refreshDateBadge();
+  checkBilanStatusAtStartup();
+});
+
 
 // ───────── Sous-onglets onglet 2 ─────────
 function openTab2View(name){
@@ -981,6 +1061,25 @@ async function loadNutrition(sheetName){
     // Sur 'tab2' (menu), on ne charge rien.
   };
 })();
+
+function goToTab(n) {
+  const targetId = 'tab' + n;
+
+  // Active uniquement l'onglet ciblé
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(targetId)?.classList.add('active');
+
+  // Si on revient à l'accueil, on remet l'état propre
+  if (n === 1) {
+    document.getElementById('bilanPanel')?.classList.remove('hidden');
+    document.getElementById('startPanel')?.classList.add('hidden');
+    document.getElementById('qaPanel')?.classList.add('hidden');
+    document.getElementById('donePanel')?.classList.add('hidden');
+    document.getElementById('profilePanel')?.classList.add('hidden');
+  }
+}
+
+window.goToTab = goToTab;
 
 
 // Service Worker
