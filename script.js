@@ -211,11 +211,10 @@ function buildInput(q){
 }
 
 function openDailyCheckin() {
-  const today = todayFR();                     // ex : "17/11/2025"
-  const done  = localStorage.getItem("bilan_done");
+  const stored = localStorage.getItem('bilan_done');
 
-  // 🔒 Si on a déjà fait le bilan aujourd’hui → on bloque
-  if (done === today) {
+  // 🔒 1) Vérifier si le bilan a déjà été fait aujourd’hui
+  if (stored && isToday(stored)) {
     alert("Le bilan du jour a déjà été complété.");
 
     const btn = document.getElementById('bilanBtn');
@@ -226,9 +225,16 @@ function openDailyCheckin() {
     return;
   }
 
-  // 🔓 Sinon : ouverture normale
+  // 🔓 2) Sinon : ouverture normale du bilan
   document.getElementById('bilanPanel').classList.add('hidden');
   document.getElementById('startPanel').classList.remove('hidden');
+}
+
+function isToday(dateStr) {
+  if (!dateStr) return false;
+
+  const today = todayFR(); // ex : "19/11/2025"
+  return dateStr === today;
 }
 
 
@@ -470,16 +476,23 @@ function pingScript(){
 window.pingScript = pingScript;
 
 function checkBilanStatusAtStartup() {
-  const flag = localStorage.getItem("bilan_done");
   const btn = document.getElementById('bilanBtn');
   if (!btn) return;
 
-  // Si déjà fait → on grise et on bloque
-  if (flag === "1") {
+  const storedDate = localStorage.getItem("bilan_done"); // ex : "20/11/2025"
+  const today = todayFR();
+
+  // 🔒 Si la date stockée = aujourd'hui → on bloque
+  if (storedDate === today) {
     btn.disabled = true;
     btn.classList.add('disabled');
+  } else {
+    // 🔓 Sinon = jour différent → on réactive
+    btn.disabled = false;
+    btn.classList.remove('disabled');
   }
 }
+
 
 // ---------- init ----------
 logDiag('JS chargé', true);
