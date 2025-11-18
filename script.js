@@ -376,29 +376,32 @@ function submitAnswer(){
 }
 window.submitAnswer = submitAnswer;
 
-function finishAndSend(){
+function finishAndSend() {
+  // 1) UI : on affiche l'écran "c'est fini"
   $('#qaPanel').classList.add('hidden');
   $('#donePanel').classList.remove('hidden');
 
   const btn = document.getElementById('submitAnswer');
   if (btn) btn.style.display = 'none';
 
+  // 2) Envoi des réponses au Google Sheet
   const bulk = Object.keys(state.answers).map(col => ({ col, value: state.answers[col] }));
-  sendBulk({ date: state.date, sheet: SHEET_TAB, bulk }, err=>{
-    if (err) {
-      alert('Envoi au Google Sheet : ' + err);
-      return;
-    }
-
-    // ✅ Si l'envoi est OK : on marque le bilan comme fait pour cette date
-    try {
-      localStorage.setItem('bilan_done', '1');        // bilan fait
-      localStorage.setItem('bilan_date', state.date); // ex : "18/11/2025"
-    } catch(e) {
-      console.warn('localStorage error', e);
-    }
+  sendBulk({ date: state.date, sheet: SHEET_TAB, bulk }, err => {
+    if (err) alert('Envoi au Google Sheet : ' + err);
   });
+
+  // 3) 🔒 Marquer le bilan comme FAIT pour aujourd'hui
+  const today = todayFR();                     // ex : "21/11/2025"
+  localStorage.setItem('bilan_done', today);
+
+  // 4) 🔒 Désactiver immédiatement le bouton "BILAN DU JOUR"
+  const bilanBtn = document.getElementById('bilanBtn');
+  if (bilanBtn) {
+    bilanBtn.disabled = true;
+    bilanBtn.classList.add('disabled'); // tu as déjà le CSS pour ça
+  }
 }
+
 
 
 
