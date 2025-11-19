@@ -82,13 +82,20 @@
         </div>
       </div>
 
-      <div id="donePanel" class="hidden card" style="text-align:center; padding:20px;">
-        <p>🔥 C’est tout pour aujourd’hui. Bien joué !</p>
+      <div id="donePanel" class="hidden done-card card">
+        <div class="done-emoji">🔥</div>
+        <h2 class="done-title">C’est tout pour aujourd’hui</h2>
+        <p class="done-subtitle">Tu as complété ton bilan du jour. Beau travail 👌</p>
 
-        <button class="primary" style="margin-top:15px;" onclick="goToTab(1)">
+        <div class="done-chip">Bilan du jour enregistré</div>
+
+        <p class="done-next">Reviens demain pour continuer ta progression.</p>
+
+        <button class="primary done-btn" onclick="goToTab(1)">
           ← Retour à l’accueil
         </button>
       </div>
+
 
 
       <!-- Panneau PROFIL (caché au départ) -->
@@ -125,6 +132,7 @@
             </div>
           </div>
 
+
           <!-- ✅ Barre de points santé sous les blocs, centrée -->
           <div class="profile-health-bar-wrap">
             <div class="health-bar-container">
@@ -132,8 +140,21 @@
             </div>
           </div>
 
-        </div>
-      </div>
+          <!-- Ligne avec Steps + Distance -->
+          <!-- Bloc "steps + distance" côte à côte -->
+          <div class="profile-row">
+            <div class="profile-item half">
+              <div class="profile-label">Steps</div>
+              <div id="profileStepsTotal" class="profile-value small">—</div>
+            </div>
+
+            <div class="profile-item half">
+              <div class="profile-label">Distance</div>
+              <div id="profileDistanceKm" class="profile-value small">—</div>
+            </div>
+
+          </section>
+
 
       </section>
 
@@ -165,36 +186,60 @@
 
     
     <!-- Sous-page : Graphique Sommeil -->
-    <section id="tab2-sleep" class="tab">
-      <button class="back"
-        onclick="switchTab('tab2', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">← Retour</button>
+            <section id="tab2-sleep" class="tab">
+              <button class="back"
+                onclick="switchTab('tab2', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">← Retour</button>
 
-      <div class="card">
-        <div class="card-header">
-          <h2>Sommeil (durée)</h2>
-          <span id="lastSleepBadge" class="chip">—</span>
-        </div>
-        <div class="chart-wrap" style="height:260px">
-          <canvas id="sleepChart"></canvas>
-        </div>
-      </div>
-    </section>
+              <!-- Carte 1 : graphique sommeil -->
+              <div class="card">
+                <div class="card-header">
+                  <h2>Sommeil (durée)</h2>
+                  <span id="lastSleepBadge" class="chip">—</span>
+                </div>
+                <div class="chart-wrap" style="height:260px">
+                  <canvas id="sleepChart"></canvas>
+                </div>
+              </div>
 
-    <!-- Sous-page : Graphique Poids -->
-    <section id="tab2-weight" class="tab">
-      <button class="back"
-        onclick="switchTab('tab2', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">← Retour</button>
+              <!-- 🆕 Carte 2 : moyenne 7 jours -->
+              <div class="card sleep-avg-card">
+                <div class="card-header">
+                  <div class="summary-title">Moyenne sur les 7 derniers jours</div>
+                </div>
+                <div class="sleep-summary-body">
+                  <div id="sleepAvgText" class="sleep-summary-value">—</div>
+                </div>
+              </div>
+            </section>
 
-      <div class="card">
-        <div class="card-header">
-          <h2>Évolution du poids</h2>
-          <span id="lastWeightBadge" class="chip">—</span>
-        </div>
-        <div class="chart-wrap" style="height:260px">
-          <canvas id="weightChart"></canvas>
-        </div>
-      </div>
-    </section>
+
+
+          <!-- Sous-page : Graphique Poids -->
+          <section id="tab2-weight" class="tab">
+            <button class="back"
+              onclick="switchTab('tab2', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">
+              ← Retour
+            </button>
+
+            <div class="card">
+              <div class="card-header">
+                <h2>Évolution du poids</h2>
+                <span id="lastWeightBadge" class="chip">—</span>
+              </div>
+
+              <div class="chart-wrap" style="height:260px">
+                <canvas id="weightChart"></canvas>
+              </div>
+            </div>
+
+            <!-- 🆕 Carte Moyenne 7 jours -->
+            <div id="weightAvgCard" class="summary-card">
+              <div class="summary-title">Moyenne sur les 7 derniers jours</div>
+              <div id="weightAvgValue" class="summary-value">—</div>
+            </div>
+
+          </section>
+
 
     <!-- Sous-page : Graphique Pas -->
     <section id="tab2-steps" class="tab">
@@ -209,6 +254,12 @@
         <div class="chart-wrap" style="height:260px">
           <canvas id="stepsChart"></canvas>
         </div>
+      </div>
+
+      <!-- 🆕 Carte moyenne 7 jours -->
+      <div id="stepsAvgCard" class="summary-card">
+        <div class="summary-title">Moyenne sur les 7 derniers jours</div>
+        <div id="stepsAvgValue" class="summary-value">—</div>
       </div>
     </section>
 
@@ -241,7 +292,7 @@
       <pre id="pingResult"></pre>
     </section>
 
-    <div id="appVersion" class="app-version">Version : 0.0.2</div>
+    <div id="appVersion" class="app-version">Version : 0.0.3 (20/11/2025)</div>
 
   </main>
 
