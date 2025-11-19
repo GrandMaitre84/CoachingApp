@@ -37,7 +37,6 @@ var DURATION_AS_TIME_FRACTION = false; // false => "HH:MM", true => fraction de 
 // ********************************
 
 // ───────── PROFIL : chargement des données depuis Apps Script ─────────
-let profileLoaded = false;
 
 function formatProfileDateFR(raw) {
   if (!raw) return '—';
@@ -75,7 +74,7 @@ async function loadProfileData() {
 
     const p = json.data || {};
 
-    // 🔹 On supporte plusieurs IDs possibles (anciennes et nouvelles versions HTML)
+    // 🔹 On récupère les éléments du DOM
     const nameEl   = document.getElementById('profileNameBadge');
 
     const ageEl    =
@@ -97,45 +96,132 @@ async function loadProfileData() {
 
     const barEl = document.getElementById('healthBar');
 
-    // 🔹 Remplissage des champs
+    // 🔹 Remplissage basique (nom, âge, début coaching)
     if (nameEl)  nameEl.textContent  = p.name || '—';
-    if (ageEl)   ageEl.textContent   =
-      (p.age !== undefined && p.age !== null && p.age !== '') ? p.age : '—';
 
-    if (startEl) startEl.textContent = formatProfileDateFR(p.startDate);
+    if (ageEl) {
+      const rawAge = (p.age ?? '').toString().trim();
+      ageEl.textContent = rawAge === '' ? '—' : rawAge;
+    }
 
-    if (scoreEl) {
-      const raw = p.healthScore;
-      const txt = String(raw ?? '').trim();   // gère 0, "0", " 0 ", etc.
-
-      scoreEl.textContent = (txt === '') ? '—' : txt;
+    if (startEl) {
+      startEl.textContent = formatProfileDateFR(p.startDate);
     }
 
 
-    // 🔹 Points santé : texte "X / 100" + barre
-    let points = null;
-    if (p.healthPoints !== undefined && p.healthPoints !== null && p.healthPoints !== '') {
-      const n = Number(p.healthPoints);
-      if (Number.isFinite(n)) points = n;
-    }
+    // 🔹 Puis on va chercher le total de points santé côté Apps Script
+    await loadProfileHealthPoints(scoreEl, ptsTextEl, barEl);
 
-    const clamped = points === null ? 0 : Math.max(0, Math.min(100, points));
-
-    if (ptsTextEl) {
-      ptsTextEl.textContent = points === null ? '— / 100' : clamped + ' / 100';
-    }
-
-    if (barEl) {
-      barEl.style.width = clamped + '%';
-    }
-
-    profileLoaded = true;
+  
   } catch (err) {
     console.error('loadProfileData error:', err);
     const badge = document.getElementById('profileNameBadge');
     if (badge) badge.textContent = 'Erreur profil';
   }
 }
+
+
+
+
+
+async function loadProfileStepsTotal() {
+  try {
+    const clientId = (window.__CLIENT_ID__ || '').trim();
+
+    // même endpoint que ton test :
+    // https://.../exec?action=steps_total&id=test
+    let url = GAS_URL + '?action=steps_total';
+    if (clientId) url += '&id=' + encodeURIComponent(clientId);
+
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error || 'Réponse Apps Script invalide');
+
+    // totalSteps vient directement du Apps Script
+    const total = Number(json.totalSteps || 0);
+
+    const stepsEl = document.getElementById('profileStepsTotal');
+    const distEl  = document.getElementById('profileDistanceKm');
+
+    // 👉 Affichage des steps
+    if (stepsEl) {
+      stepsEl.textContent = total.toLocaleString('fr-FR');
+    }
+
+    // 👉 Conversion en km (0,8 m par pas → 0,0008 km)
+    if (distEl) {
+      if (total > 0) {
+        const km = total * 0.0008; // 0.8 m par pas
+        distEl.textContent = km.toFixed(1).replace('.', ',') + ' km';
+      } else {
+        distEl.textContent = '0 km';
+      }
+    }
+
+  } catch (err) {
+    console.error('loadProfileStepsTotal error:', err);
+    const distEl = document.getElementById('profileDistanceKm');
+    if (distEl) distEl.textContent = '—';
+  }
+}
+
+async function loadProfileHealthPoints(scoreEl, ptsTextEl, barEl) {
+  try {
+    const clientId = (window.__CLIENT_ID__ || '').trim();
+
+    let url = GAS_URL + '?action=healthpoints_total';
+    if (clientId) url += '&id=' + encodeURIComponent(clientId);
+
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    const json = await res.json();
+    console.log('healthPoints JSON = ', json);  // debug
+
+    if (!json.ok) throw new Error(json.error || 'Réponse Apps Script invalide');
+
+    // 🧮 Total de points santé cumulés
+    const totalNum = Number(json.totalHealthPoints);
+    if (!Number.isFinite(totalNum)) {
+      console.warn('totalHealthPoints invalide :', json.totalHealthPoints);
+      return; // on laisse le profil avec les valeurs par défaut
+    }
+
+    // 🔢 Score santé = total // 100  (division entière)
+    const level = Math.floor(totalNum / 100);
+
+    // 🎯 Points santé = reste de la division (0–99)
+    const remainder = totalNum % 100;
+
+    // 👀 Debug visuel si besoin
+    console.log('HP calculés => total=', totalNum, ' level=', level, ' remainder=', remainder);
+
+    // 🧱 Score santé (doit afficher 2 si total = 280)
+    if (scoreEl) {
+      scoreEl.textContent = String(level);
+    }
+
+    // 🔄 Affichage "X / 100" pour les points santé
+    if (ptsTextEl) {
+      ptsTextEl.textContent = `${remainder} / 100`;
+    }
+
+    // 📊 Barre : largeur basée sur le reste 0–99
+    if (barEl) {
+      const pct = Math.max(0, Math.min(100, remainder));
+      barEl.style.width = pct + '%';
+    }
+
+  } catch (err) {
+    console.error('loadProfileHealthPoints error:', err);
+    // On ne casse rien visuellement, on garde les valeurs déjà mises
+  }
+}
+
+
+
 
 
 
@@ -259,11 +345,13 @@ function openProfile() {
   // On affiche le panneau profil
   document.getElementById('profilePanel')?.classList.remove('hidden');
 
-  // On charge les données (une seule fois, sauf si tu veux forcer le refresh)
-  if (!profileLoaded) {
-    loadProfileData();
-  }
+  // On recharge TOUT à chaque ouverture :
+  loadProfileData();        // nom, âge, début, score santé, points santé + barre
+  loadProfileStepsTotal();  // steps + distance
 }
+
+
+
 
 function closeProfile() {
   // On cache le profil
@@ -497,6 +585,7 @@ function checkBilanStatusAtStartup() {
 }
 
 
+
 // ---------- init ----------
 logDiag('JS chargé', true);
 document.addEventListener('DOMContentLoaded', () => {
@@ -551,14 +640,17 @@ async function loadWeightChart(){
 
 
 function renderWeightChart(points){
-  const badge  = document.getElementById('lastWeightBadge');
-  const canvas = document.getElementById('weightChart');
+  const badge     = document.getElementById('lastWeightBadge');
+  const canvas    = document.getElementById('weightChart');
+  const avgValue  = document.getElementById('weightAvgValue');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
 
-  // aucune donnée -> badge vide + canvas nettoyé
+  // aucune donnée -> badge vide + canvas nettoyé + texte par défaut
   if (!points || !points.length){
-    if (badge) badge.textContent = '—';
+    if (badge)    badge.textContent = '—';
+    if (avgValue) avgValue.textContent = 'Pas assez de données';
+
     if (weightChart){ weightChart.destroy(); weightChart = null; }
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     return;
@@ -567,9 +659,22 @@ function renderWeightChart(points){
   const labels = points.map(p => p.date);
   const values = points.map(p => Number(p.weight));
 
+  // Badge dernier poids
   if (badge){
     const last = values[values.length - 1];
     badge.textContent = `${last.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} kg`;
+  }
+
+  // 🆕 Moyenne sur les 7 derniers points (max)
+  if (avgValue){
+    const last7 = values.slice(-7).filter(v => Number.isFinite(v));
+    if (last7.length){
+      const sum = last7.reduce((acc, v) => acc + v, 0);
+      const avg = sum / last7.length;
+      avgValue.textContent = `${avg.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} kg`;
+    } else {
+      avgValue.textContent = '—';
+    }
   }
 
   if (weightChart) weightChart.destroy();
@@ -602,6 +707,11 @@ function renderWeightChart(points){
   });
 }
 
+
+
+
+
+
 // ───────── Graphique sommeil (durée en heures) ─────────
 let sleepChart = null;
 
@@ -632,14 +742,20 @@ async function loadSleepChart(){
 
 
 function renderSleepChart(points){
-  const badge  = document.getElementById('lastSleepBadge');
-  const canvas = document.getElementById('sleepChart');
+  const badge      = document.getElementById('lastSleepBadge');
+  const canvas     = document.getElementById('sleepChart');
+  const avgTextEl  = document.getElementById('sleepAvgText');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
 
+  // Pas de données : on reset tout proprement
   if (!points || !points.length){
-    if (badge) badge.textContent = '—';
-    if (sleepChart){ sleepChart.destroy(); sleepChart = null; }
+    if (badge)     badge.textContent = '—';
+    if (avgTextEl) avgTextEl.textContent = '—';
+    if (sleepChart){
+      sleepChart.destroy();
+      sleepChart = null;
+    }
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     return;
   }
@@ -647,11 +763,55 @@ function renderSleepChart(points){
   const labels = points.map(p => p.date);
   const values = points.map(p => Number(p.sleep)); // heures décimales
 
+  // Badge dernier sommeil (dernier point)
   if (badge){
     const last = values[values.length - 1];
     badge.textContent = hoursToLabel(last);
   }
 
+  // 🆕 Calcul moyenne sur les 7 derniers jours (calendaires)
+  if (avgTextEl) {
+    const parseFRDate = (s) => {
+      const m = String(s || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+      if (!m) return null;
+      return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+    };
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const sevenDaysAgo = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate() - 6
+    );
+
+    let sum = 0;
+    let count = 0;
+
+    points.forEach(p => {
+      const d = parseFRDate(p.date);
+      if (!d) return;
+      d.setHours(0,0,0,0);
+
+      if (d >= sevenDaysAgo && d <= today) {
+        const h = Number(p.sleep);
+        if (!Number.isNaN(h)) {
+          sum += h;
+          count++;
+        }
+      }
+    });
+
+    if (count > 0) {
+      const avg = sum / count;
+      const label = hoursToLabel(avg);  // ex: "7h30"
+      avgTextEl.textContent = label;    // ✅ juste la moyenne
+    } else {
+      avgTextEl.textContent = '—';
+    }
+  }
+
+  // Graphique
   if (sleepChart) sleepChart.destroy();
   sleepChart = new Chart(canvas, {
     type: 'line',
@@ -682,6 +842,9 @@ function renderSleepChart(points){
   });
 }
 
+
+
+
 // ───────── Graphique pas (barres) ─────────
 let stepsChart = null;
 
@@ -705,38 +868,57 @@ async function loadStepsChart(){
 }
 
 function renderStepsChart(points){
-  const badge  = document.getElementById('lastStepsBadge');
-  const canvas = document.getElementById('stepsChart');
+  const badge     = document.getElementById('lastStepsBadge');
+  const canvas    = document.getElementById('stepsChart');
+  const avgValue  = document.getElementById('stepsAvgValue');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
 
-  // aucune donnée -> badge vide + canvas nettoyé
+  // aucune donnée -> badge vide + canvas nettoyé + message par défaut
   if (!points || !points.length){
-    if (badge) badge.textContent = '—';
+    if (badge)    badge.textContent = '—';
+    if (avgValue) avgValue.textContent = 'Pas assez de données';
+
     if (stepsChart){ stepsChart.destroy(); stepsChart = null; }
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     return;
   }
 
   const labels = points.map(p => p.date);
-  const values = points.map(p => Number(p.steps || 0));
+  const values = points.map(p => Number(p.steps));
 
+  // Badge dernier total de pas
   if (badge){
     const last = values[values.length - 1];
     badge.textContent = `${last.toLocaleString('fr-FR')} pas`;
   }
 
+  // 🆕 Moyenne sur les 7 derniers jours
+  if (avgValue){
+    const last7 = values.slice(-7).filter(v => Number.isFinite(v));
+    if (last7.length){
+      const sum = last7.reduce((acc, v) => acc + v, 0);
+      const avg = Math.round(sum / last7.length);
+      avgValue.textContent = `${avg.toLocaleString('fr-FR')} pas`;
+    } else {
+      avgValue.textContent = '—';
+    }
+  }
+
+  // Affichage du graphe
   if (stepsChart) stepsChart.destroy();
   stepsChart = new Chart(canvas, {
-    type: 'bar',
+    type: 'line',
     data: {
       labels,
       datasets: [{
         data: values,
-        borderWidth: 0,
-        barPercentage: 0.8,
-        categoryPercentage: 0.8,
-        backgroundColor: '#10b981' // vert doux; on peut ajuster si tu veux
+        borderWidth: 2,
+        tension: 0.35,
+        pointRadius: 3,
+        pointHoverRadius: 4,
+        borderColor: '#4da6ff',
+        pointBackgroundColor: '#52e0c8'
       }]
     },
     options: {
@@ -746,7 +928,6 @@ function renderStepsChart(points){
       scales: {
         x: { grid: { display: false } },
         y: {
-          beginAtZero: true,
           ticks: { callback: v => v.toLocaleString('fr-FR') },
           grid: { color: 'rgba(0,0,0,.08)' }
         }
@@ -754,6 +935,7 @@ function renderStepsChart(points){
     }
   });
 }
+
 
 // Helper manquant : échappe le HTML pour l'affichage sécurisé
 function escapeHtml(s){
@@ -1107,3 +1289,17 @@ if ("serviceWorker" in navigator) {
       .catch(err => console.error("❌ Service Worker erreur :", err));
   });
 }
+
+// ===== MODE TEST : Reset complet si on appuie sur la touche A =====
+document.addEventListener('keydown', (e) => {
+  if (e.key.toLowerCase() === 'a') {
+    localStorage.removeItem('bilan_done');
+    alert("🔄 Reset test effectué : bilan réactivé !");
+
+    const btn = document.getElementById('bilanBtn');
+    if (btn) {
+      btn.disabled = false;
+      btn.classList.remove('disabled');
+    }
+  }
+});
