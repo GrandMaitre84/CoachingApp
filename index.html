@@ -43,6 +43,8 @@
       <div id="bilanPanel">
         <button id="bilanBtn" class="primary" onclick="openDailyCheckin()">BILAN DU JOUR</button>
         <button id="profileBtn" class="primary" onclick="openProfile()">PROFILE</button>
+        <button id="todoBtn" class="primary" onclick="openTodo()">TO DO LIST</button>
+
       </div>
 
 
@@ -124,6 +126,18 @@
               <div class="profile-label">Score santé</div>
               <div id="profileHealthScore" class="profile-value">—</div>
             </div>
+            <!-- Panneau TO DO LIST (caché au départ) -->
+            <div id="todoPanel" class="hidden">
+              <button class="secondary" onclick="closeTodo()">← Retour</button>
+
+              <div class="card">
+                <h2 class="profile-title">To Do List</h2>
+                <p class="note">
+                  Espace TODO à configurer (tâches, cases à cocher, etc.).
+                </p>
+              </div>
+            </div>
+
 
             <!-- ⚠️ Bloc Points santé RESTE dans la grille -->
             <div class="profile-item">
@@ -175,11 +189,11 @@
         </button>
         <button class="tile"
           onclick="switchTab('tab2-steps', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">
-          🦶 PAS
+          👟PAS
         </button>
         <button class="tile"
           onclick="switchTab('tab2-nutrition', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">
-          🍽️ NUTRITION
+          🍏NUTRITION
         </button>
       </div>
     </section>
@@ -233,7 +247,7 @@
             </div>
 
             <!-- 🆕 Carte Moyenne 7 jours -->
-            <div id="weightAvgCard" class="summary-card">
+            <div id="weightAvgCard" class="summary-card weight-avg-card">
               <div class="summary-title">Moyenne sur les 7 derniers jours</div>
               <div id="weightAvgValue" class="summary-value">—</div>
             </div>
@@ -257,7 +271,7 @@
       </div>
 
       <!-- 🆕 Carte moyenne 7 jours -->
-      <div id="stepsAvgCard" class="summary-card">
+      <div id="stepsAvgCard" class="summary-card steps-avg-card">
         <div class="summary-title">Moyenne sur les 7 derniers jours</div>
         <div id="stepsAvgValue" class="summary-value">—</div>
       </div>
@@ -293,6 +307,26 @@
     </section>
 
     <div id="appVersion" class="app-version">Version : 0.0.3 (20/11/2025)</div>
+
+            <!-- Onglet TO DO LIST -->
+            <section id="tab2-todo" class="tab">
+              <button class="back"
+                onclick="switchTab('tab1', document.querySelector('.tab-btn[data-tab=&quot;tab1&quot;]'))">
+                ← Retour
+              </button>
+
+              <div class="card">
+                <div class="card-header">
+                  <h2>To Do List</h2>
+                </div>
+
+                <div id="todoContent" class="todo-wrap">
+                  <p class="note">Aucune tâche pour le moment.</p>
+                </div>
+
+                <button class="primary" onclick="addTodo()">+ Ajouter une tâche</button>
+              </div>
+            </section>
 
   </main>
 
