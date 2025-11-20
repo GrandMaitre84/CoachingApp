@@ -153,7 +153,7 @@ async function loadProfileStepsTotal() {
     // 👉 Conversion en km (0,8 m par pas → 0,0008 km)
     if (distEl) {
       if (total > 0) {
-        const km = total * 0.0008; // 0.8 m par pas
+        const km = total * 0.000635; // 0.635 m par pas (calibré sur données iPhone)
         distEl.textContent = km.toFixed(1).replace('.', ',') + ' km';
       } else {
         distEl.textContent = '0 km';
@@ -171,7 +171,8 @@ async function loadProfileHealthPoints(scoreEl, ptsTextEl, barEl) {
   try {
     const clientId = (window.__CLIENT_ID__ || '').trim();
 
-    let url = GAS_URL + '?action=healthpoints_total';
+    // ✅ nouveau endpoint unifié
+    let url = GAS_URL + '?action=healthpoints';
     if (clientId) url += '&id=' + encodeURIComponent(clientId);
 
     const res = await fetch(url);
@@ -182,33 +183,34 @@ async function loadProfileHealthPoints(scoreEl, ptsTextEl, barEl) {
 
     if (!json.ok) throw new Error(json.error || 'Réponse Apps Script invalide');
 
-    // 🧮 Total de points santé cumulés
-    const totalNum = Number(json.totalHealthPoints);
+    // 🧮 Total points = base (journal) + bonus TODO list
+    const totalNum = Number(json.totalHealthPoints ?? json.total ?? 0);
     if (!Number.isFinite(totalNum)) {
       console.warn('totalHealthPoints invalide :', json.totalHealthPoints);
-      return; // on laisse le profil avec les valeurs par défaut
+      return;
     }
 
-    // 🔢 Score santé = total // 100  (division entière)
+    // Pour debug : détail des sources
+    console.log(
+      'HP calculés => base =', json.basePoints,
+      'todoBonus =', json.todoBonus,
+      'total =', totalNum
+    );
+
+    // 🔢 Score santé = total // 100
     const level = Math.floor(totalNum / 100);
 
-    // 🎯 Points santé = reste de la division (0–99)
+    // 🎯 Points santé = reste (0–99)
     const remainder = totalNum % 100;
 
-    // 👀 Debug visuel si besoin
-    console.log('HP calculés => total=', totalNum, ' level=', level, ' remainder=', remainder);
-
-    // 🧱 Score santé (doit afficher 2 si total = 280)
     if (scoreEl) {
       scoreEl.textContent = String(level);
     }
 
-    // 🔄 Affichage "X / 100" pour les points santé
     if (ptsTextEl) {
       ptsTextEl.textContent = `${remainder} / 100`;
     }
 
-    // 📊 Barre : largeur basée sur le reste 0–99
     if (barEl) {
       const pct = Math.max(0, Math.min(100, remainder));
       barEl.style.width = pct + '%';
@@ -216,9 +218,10 @@ async function loadProfileHealthPoints(scoreEl, ptsTextEl, barEl) {
 
   } catch (err) {
     console.error('loadProfileHealthPoints error:', err);
-    // On ne casse rien visuellement, on garde les valeurs déjà mises
+    // On laisse les anciennes valeurs si erreur
   }
 }
+
 
 
 
@@ -364,6 +367,118 @@ function closeProfile() {
 // On expose les fonctions pour les onclick dans le HTML
 window.openProfile  = openProfile;
 window.closeProfile = closeProfile;
+
+function openTodo() {
+  switchTab('tab2-todo', document.querySelector('.tab-btn[data-tab="tab1"]'));
+}
+
+function addTodo() {
+  const text = prompt("Nouvelle tâche :");
+  if (!text) return;
+
+  const wrap = document.getElementById("todoContent");
+  const div = document.createElement("div");
+  div.className = "todo-item";
+
+  const id = "todo-" + Math.random().toString(36).slice(2);
+
+  div.innerHTML = `
+    <input type="checkbox" id="${id}" onchange="completeTodo(this)">
+    <label for="${id}" class="todo-text">${text}</label>
+  `;
+
+  wrap.appendChild(div);
+}
+
+function completeTodo(checkbox) {
+  if (!checkbox.checked) return;
+
+  // Disparition animée
+  const item = checkbox.closest(".todo-item");
+  if (item) {
+    item.style.opacity = "0";
+    item.style.transform = "scale(0.95)";
+    setTimeout(() => item.remove(), 200);
+  }
+
+  // ⚡ Ajout de +5 pts santé immédiatement
+  const ptsEl = document.getElementById("profileHealthPoints");
+  const barEl = document.getElementById("healthBar");
+
+  if (ptsEl) {
+    let current = Number(ptsEl.textContent.split("/")[0]) || 0;
+    current += 5;
+
+    // Si on dépasse 100 → +1 score santé et reset à 0
+    const scoreEl = document.getElementById("profileHealthScore");
+    if (current >= 100) {
+      current -= 100;
+      if (scoreEl) {
+        let score = Number(scoreEl.textContent) || 0;
+        scoreEl.textContent = score + 1;
+      }
+    }
+
+    ptsEl.textContent = `${current} / 100`;
+
+    if (barEl) {
+      barEl.style.width = current + "%";
+    }
+  }
+}
+
+const TODO_POINTS_PER_TASK = 5;
+
+const todoWrap = document.getElementById('todoContent');
+if (todoWrap) {
+  todoWrap.addEventListener('change', async (e) => {
+    const cb = e.target;
+    if (!cb.matches('input[type="checkbox"]')) return;
+    if (!cb.checked) return;
+
+    const item = cb.closest('.todo-item');
+    if (!item) return;
+
+    // 1) Appel Apps Script pour ajouter les points en F2
+    try {
+      const clientId = (window.__CLIENT_ID__ || '').trim();
+
+      let url = GAS_URL + '?action=todo_add'
+        + '&points=' + encodeURIComponent(TODO_POINTS_PER_TASK);
+
+      if (clientId) url += '&id=' + encodeURIComponent(clientId);
+
+      const res  = await fetch(url);
+      const json = await res.json().catch(() => ({}));
+
+      if (!res.ok || !json.ok) {
+        console.error('todo_add error', json.error || ('HTTP ' + res.status));
+      }
+    } catch (err) {
+      console.error('todo_add fetch error', err);
+    }
+
+    // 2) Animation + suppression visuelle
+    item.classList.add('done');       // classe CSS avec l’animation
+    setTimeout(() => {
+      item.remove();
+
+      // si plus aucune tâche -> remettre le message vide
+      if (!todoWrap.querySelector('.todo-item')) {
+        todoWrap.innerHTML = '<p class="note empty-todo-text">Aucune tâche pour le moment.</p>';
+      }
+    }, 450);
+
+    // 3) Si le profil est ouvert, on rafraîchit les points santé
+    const profilePanel = document.getElementById('profilePanel');
+    if (profilePanel && !profilePanel.classList.contains('hidden')) {
+      const scoreEl   = document.getElementById('profileHealthScore');
+      const ptsTextEl = document.getElementById('profileHealthPoints');
+      const barEl     = document.getElementById('healthBar');
+      loadProfileHealthPoints(scoreEl, ptsTextEl, barEl);
+    }
+  });
+}
 
 
 
@@ -1229,7 +1344,6 @@ async function loadNutrition(sheetName){
 
 
     box.innerHTML = html;
-    if (meta) meta.textContent = `Nutrition · ${rows?.length || 0} lignes`;
     nutrLoaded = true;
 
   }catch(err){
