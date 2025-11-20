@@ -793,43 +793,23 @@ button.primary:disabled {
   border: 1px solid #bbf7d0;
 }
 
-.done-next {
-  margin-top: 12px;
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.done-btn {
-  margin-top: 16px;
-  width: 100%;
-}
-
-.sleep-avg-card {
-  margin-top: 12px;
-}
-
-.sleep-summary-body {
-  padding-top: 4px;
-}
-
-.sleep-summary-value {
-  font-size: 16px;
-  font-weight: 800;
-  text-align: center;
-  color: var(--text);
-}
-
+/* ===========================
+   🎯 Carte de résumé (base)
+   =========================== */
 .summary-card {
   margin-top: 14px;
   padding: 14px 16px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+
   background: #ffffff;
   border: 1px solid var(--line);
   border-radius: 14px;
 
-  display: flex;
-  flex-direction: column;
-  align-items: center;   /* centre horizontalement */
-  text-align: center;    /* centre le texte */
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .summary-title {
@@ -841,31 +821,211 @@ button.primary:disabled {
 .summary-value {
   font-size: 20px;
   font-weight: 700;
+  color: var(--text);
 }
 
-.summary-card {
-  margin-top: 14px;
-  padding: 14px 16px;
-  background: #ffffff;
-  border: 1px solid var(--line);
-  border-radius: 14px;
+/* ===========================
+   😴 SOMMEIL — coloration douce
+   =========================== */
+.sleep-avg-card,
+#sleepAvgBlock {
+  background: #f0fffa;      /* vert/turquoise pastel */
+  border-color: #ccf5e9;
+}
 
+/* ===========================
+   ⚖️ POIDS — coloration douce
+   =========================== */
+.weight-avg-card,
+#weightAvgBlock {
+  background: #f0fffa;      /* vert/turquoise pastel */
+  border-color: #ccf5e9;
+}
+
+/* ===========================
+   🦶 PAS — coloration douce
+   =========================== */
+.steps-avg-card,
+#stepsAvgBlock {
+  background: #f0fffa;      /* vert/turquoise pastel */
+  border-color: #ccf5e9;
+}
+
+
+/* Ajoute un espace entre deux cartes dans SOMMEIL */
+#tab2-sleep .card + .card {
+  margin-top: 16px;
+}
+
+/* Boutons "← Retour" des sous-onglets (Sommeil, Poids, Pas, Nutrition)
+   → même style que .secondary */
+.back{
+  background:#e5e7eb;        /* même gris que .secondary */
+  color:var(--text);
+  border:1px solid var(--line);
+  padding:14px;
+  border-radius:12px;
+  font-weight:600;
+  width:100%;
+  font-size:16px;
+  cursor:pointer;
+  margin-bottom:12px;
+}
+
+#tab2-nutrition .card-header {
+  justify-content: center !important;
+}
+
+#nutriMeta {
+  display: none !important;
+}
+
+.todo-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #f8f8f8;
+}
+
+.todo-item input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+}
+
+.todo-text {
+  flex: 1;
+  font-size: 16px;
+}
+
+.todo-item {
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+/* Centrage bloc moyenne sommeil */
+.sleep-avg-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
 }
 
-.summary-title {
+.sleep-summary-body {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.sleep-summary-value {
+  text-align: center;
+  width: 100%;
+}
+
+/* Conteneur normal : pas centré (pour les tâches) */
+.todo-wrap {
+  width: 100%;
+}
+
+/* Centrer seulement le message vide */
+.todo-wrap .note {
+  width: 100%;
+  text-align: center;
+  padding: 20px 0;
   color: var(--muted);
-  font-size: 13px;
-  margin-bottom: 6px;
 }
 
-.summary-value {
-  font-size: 20px;
+/* Ligne d'aliment : un peu plus aérée */
+.meal-row {
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #f9fbff;
+}
+
+/* Nom de l'aliment : plus lisible */
+.food-name {
   font-weight: 700;
+  font-size: 14px;
 }
 
+/* Grammage : plus discret */
+.food-portion {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
 
+/* Bloc des macros à droite : toujours une ligne mais plus clean */
+.macros {
+  display: flex;
+  gap: 6px;
+  font-weight: 600;
+}
+
+/* Chaque macro = mini pilule */
+.macros span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 3px 6px;
+  border-radius: 999px;
+
+  font-size: 11px;
+  min-width: 52px;
+  text-align: center;
+
+  background: #eef3ff;
+  color: var(--text);
+}
+
+/* Option léger différentiel pour les types de macros */
+.macros .mc-kcal {
+  background: #ffece5;
+}
+
+.macros .mc-pro {
+  background: #e6ffed;
+}
+
+.macros .mc-glu {
+  background: #fff9e6;
+}
+
+.macros .mc-lip {
+  background: #f5ecff;
+}
+
+/* Titre principal de nutrition */
+#tab2-nutrition .card-header h2 {
+  width: 100%;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 800;
+  color: #1e40af; /* bleu foncé classe */
+  margin-bottom: 8px;
+}
+
+/* Cache la puce "---" qui sert plus à rien */
+#nutriMeta {
+  display: none !important;
+}
+
+/* Titres des repas (Repas 1, Repas 2...) */
+.meal-card h3 {
+  font-size: 17px;
+  font-weight: 800;
+  color: #2563eb; /* bleu élégant */
+  text-align: center;
+  margin-bottom: 12px;
+  letter-spacing: 0.3px;
+}
 
