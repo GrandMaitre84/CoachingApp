@@ -3,7 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.10.2/lottie.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.10.2/lottie.min.js"></script>
+
 
   <!-- CSS externe + cache-buster -->
   <link rel="stylesheet" href="./style.css?v=7" />
@@ -199,23 +201,32 @@
     </section>
 
     
-    <!-- Sous-page : Graphique Sommeil -->
+            <!-- Sous-page : Graphique Sommeil -->
             <section id="tab2-sleep" class="tab">
               <button class="back"
-                onclick="switchTab('tab2', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">← Retour</button>
+                onclick="switchTab('tab2', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">
+                ← Retour
+              </button>
 
-              <!-- Carte 1 : graphique sommeil -->
               <div class="card">
                 <div class="card-header">
                   <h2>Sommeil (durée)</h2>
                   <span id="lastSleepBadge" class="chip">—</span>
                 </div>
-                <div class="chart-wrap" style="height:260px">
+
+                <!-- 🆕 Wrapper avec loader + canvas -->
+                <div class="chart-wrap" style="height:260px; position:relative;">
+                  <!-- Loader Lottie pour le sommeil -->
+                  <div id="sleepLoader" class="chart-lottie-loader">
+                    <div id="sleepAnim" class="chart-lottie-player"></div>
+                  </div>
+
+                  <!-- Canvas du graphique -->
                   <canvas id="sleepChart"></canvas>
                 </div>
               </div>
 
-              <!-- 🆕 Carte 2 : moyenne 7 jours -->
+              <!-- 🟣 Ta carte de moyenne, on la laisse comme tu l’avais -->
               <div class="card sleep-avg-card">
                 <div class="card-header">
                   <div class="summary-title">Moyenne sur les 7 derniers jours</div>
@@ -228,24 +239,32 @@
 
 
 
-          <!-- Sous-page : Graphique Poids -->
-          <section id="tab2-weight" class="tab">
-            <button class="back"
-              onclick="switchTab('tab2', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">
-              ← Retour
-            </button>
 
-            <div class="card">
-              <div class="card-header">
-                <h2>Évolution du poids</h2>
-                <span id="lastWeightBadge" class="chip">—</span>
+            <!-- Sous-page : Graphique Poids -->
+            <section id="tab2-weight" class="tab">
+              <button class="back"
+                onclick="switchTab('tab2', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">
+                ← Retour
+              </button>
+
+              <div class="card">
+                <div class="card-header">
+                  <h2>Évolution du poids</h2>
+                  <span id="lastWeightBadge" class="chip">—</span>
+                </div>
+
+                <!-- 🆕 Wrapper avec loader + canvas -->
+                <div class="chart-wrap" style="height:260px; position:relative;">
+                  <!-- Loader Lottie pour le poids -->
+                  <div id="weightLoader" class="chart-lottie-loader">
+                    <div id="weightAnim" class="chart-lottie-player"></div>
+                  </div>
+
+                  <!-- Canvas du graphique -->
+                  <canvas id="weightChart"></canvas>
+                </div>
               </div>
-
-              <div class="chart-wrap" style="height:260px">
-                <canvas id="weightChart"></canvas>
-              </div>
-            </div>
-
+       
             <!-- 🆕 Carte Moyenne 7 jours -->
             <div id="weightAvgCard" class="summary-card weight-avg-card">
               <div class="summary-title">Moyenne sur les 7 derniers jours</div>
@@ -255,48 +274,69 @@
           </section>
 
 
-    <!-- Sous-page : Graphique Pas -->
-    <section id="tab2-steps" class="tab">
-      <button class="back"
-        onclick="switchTab('tab2', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">← Retour</button>
+            <!-- Sous-page : Graphique Pas -->
+            <section id="tab2-steps" class="tab">
+              <button class="back"
+                onclick="switchTab('tab2', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">
+                ← Retour
+              </button>
 
-      <div class="card">
-        <div class="card-header">
-          <h2>Nombre de pas</h2>
-          <span id="lastStepsBadge" class="chip">—</span>
-        </div>
-        <div class="chart-wrap" style="height:260px">
-          <canvas id="stepsChart"></canvas>
-        </div>
-      </div>
+              <div class="card">
+                <div class="card-header">
+                  <h2>Nombre de pas</h2>
+                  <span id="lastStepsBadge" class="chip">—</span>
+                </div>
 
-      <!-- 🆕 Carte moyenne 7 jours -->
-      <div id="stepsAvgCard" class="summary-card steps-avg-card">
-        <div class="summary-title">Moyenne sur les 7 derniers jours</div>
-        <div id="stepsAvgValue" class="summary-value">—</div>
-      </div>
-    </section>
+                <!-- 🆕 Wrapper avec loader + canvas -->
+                <div class="chart-wrap" style="height:260px; position:relative;">
+                  <!-- Loader Lottie pour les pas -->
+                  <div id="stepsLoader" class="chart-lottie-loader">
+                    <div id="stepsAnim" class="chart-lottie-player"></div>
+                  </div>
 
-    <!-- Sous-page : Nutrition -->
-    <section id="tab2-nutrition" class="tab">
-      <button class="back"
-        onclick="switchTab('tab2', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">
-        ← Retour
-      </button>
+                  <!-- Canvas du graphique -->
+                  <canvas id="stepsChart"></canvas>
+                </div>
+              </div>
 
-      <div class="card">
-        <div class="card-header">
-          <h2>Programme nutrition</h2>
-          <span id="nutriMeta" class="chip">—</span>
-        </div>
+              <!-- 🆕 Carte moyenne 7 jours -->
+              <div id="stepsAvgCard" class="summary-card summary-steps">
+                <div class="summary-title">Moyenne sur les 7 derniers jours</div>
+                <div id="stepsAvgValue" class="summary-value">—</div>
+              </div>
+            </section>
 
-        <!-- 🆕 boutons Jour 1 / Jour 2 / ... -->
-        <div id="nutriDays" class="nutri-days"></div>
 
-        <!-- Contenu des repas -->
-        <div id="nutriContent"></div>
-      </div>
-    </section>
+            <!-- Sous-page : Nutrition -->
+            <section id="tab2-nutrition" class="tab">
+              <button class="back"
+                onclick="switchTab('tab2', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">
+                ← Retour
+              </button>
+
+              <div class="card">
+                <div class="card-header">
+                  <h2>Programme nutrition</h2>
+                  <span id="nutriMeta" class="chip">—</span>
+                </div>
+
+                <!-- 🆕 Boutons Jour 1 / Jour 2 / ... -->
+                <div id="nutriDays" class="nutri-days"></div>
+
+                <!-- 🆕 Wrapper avec loader + contenu -->
+                <div class="nutri-content-wrap" style="position:relative; min-height:140px;">
+                  <!-- Loader Lottie nutrition -->
+                  <div id="nutriLoader" class="chart-lottie-loader">
+                    <div id="nutriAnim" class="chart-lottie-player"></div>
+                  </div>
+
+                  <!-- Contenu des repas -->
+                  <div id="nutriContent"></div>
+                </div>
+              </div>
+            </section>
+
+
 
 
     <!-- Onglet 3 -->
@@ -306,27 +346,37 @@
       <pre id="pingResult"></pre>
     </section>
 
-    <div id="appVersion" class="app-version">Version : 0.0.3 (20/11/2025)</div>
+    <div id="appVersion" class="app-version">Version : 0.0.4 (21/11/2025)</div>
 
             <!-- Onglet TO DO LIST -->
             <section id="tab2-todo" class="tab">
+
+              <!-- Bouton Retour -->
               <button class="back"
                 onclick="switchTab('tab1', document.querySelector('.tab-btn[data-tab=&quot;tab1&quot;]'))">
                 ← Retour
               </button>
 
+              <!-- Bouton Ajouter une tâche -->
+              <button class="primary" onclick="addTodo()" style="margin-bottom: 14px;">
+                + Ajouter une tâche
+              </button>
+
+              <!-- Carte principale -->
               <div class="card">
                 <div class="card-header">
                   <h2>To Do List</h2>
                 </div>
 
-                <div id="todoContent" class="todo-wrap">
-                  <p class="note">Aucune tâche pour le moment.</p>
-                </div>
+                <!-- Contenu des tâches -->
+                <div id="todoContent" class="todo-wrap"></div>
 
-                <button class="primary" onclick="addTodo()">+ Ajouter une tâche</button>
+                <!-- Animation Overlay -->
+                <div id="todoAnimation" class="todo-lottie"></div>
               </div>
+
             </section>
+
 
   </main>
 
