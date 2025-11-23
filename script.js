@@ -390,6 +390,31 @@ function addTodo() {
   wrap.appendChild(div);
 }
 
+function playTodoAnimation() {
+  const animContainer = document.getElementById('todoAnimation');
+  if (!animContainer) return;
+
+  // Nettoyer ancienne animation si elle existe
+  animContainer.innerHTML = "";
+
+  // Lancer Lottie
+  lottie.loadAnimation({
+    container: animContainer,
+    renderer: 'svg',
+    loop: false,
+    autoplay: true,
+  path: './animations/validate.json'
+});
+
+  // Afficher brièvement le conteneur
+  animContainer.classList.add('visible');
+
+  // Le cacher après 1200ms
+  setTimeout(() => {
+    animContainer.classList.remove('visible');
+  }, 1200);
+}
+
 function completeTodo(checkbox) {
   if (!checkbox.checked) return;
 
@@ -439,7 +464,16 @@ if (todoWrap) {
     const item = cb.closest('.todo-item');
     if (!item) return;
 
-    // 1) Appel Apps Script pour ajouter les points en F2
+    // 🚀 1) Animation instantanée
+    playTodoAnimation();
+
+    // 🧽 2) Effet visuel + disparition
+    item.classList.add('done');
+    setTimeout(() => {
+      item.remove();
+    }, 450);
+
+    // 📨 3) Appel Apps Script (en arrière-plan, sans bloquer l’anim)
     try {
       const clientId = (window.__CLIENT_ID__ || '').trim();
 
@@ -457,28 +491,9 @@ if (todoWrap) {
     } catch (err) {
       console.error('todo_add fetch error', err);
     }
-
-    // 2) Animation + suppression visuelle
-    item.classList.add('done');       // classe CSS avec l’animation
-    setTimeout(() => {
-      item.remove();
-
-      // si plus aucune tâche -> remettre le message vide
-      if (!todoWrap.querySelector('.todo-item')) {
-        todoWrap.innerHTML = '<p class="note empty-todo-text">Aucune tâche pour le moment.</p>';
-      }
-    }, 450);
-
-    // 3) Si le profil est ouvert, on rafraîchit les points santé
-    const profilePanel = document.getElementById('profilePanel');
-    if (profilePanel && !profilePanel.classList.contains('hidden')) {
-      const scoreEl   = document.getElementById('profileHealthScore');
-      const ptsTextEl = document.getElementById('profileHealthPoints');
-      const barEl     = document.getElementById('healthBar');
-      loadProfileHealthPoints(scoreEl, ptsTextEl, barEl);
-    }
   });
 }
+
 
 
 
@@ -706,6 +721,12 @@ logDiag('JS chargé', true);
 document.addEventListener('DOMContentLoaded', () => {
   refreshDateBadge();
   checkBilanStatusAtStartup();
+
+  // Loaders Lottie
+  initSleepLoader();
+  initWeightLoader();
+  initStepsLoader();   // 🌀 pas
+  initNutriLoader();   // 🥗 Nutrition
 });
 
 
@@ -733,8 +754,21 @@ function backFromTab2(){
 
 // ───────── Graphique poids ─────────
 let weightChart = null;
+let weightLoaderAnim = null; // animation Lottie du poids
+
 
 async function loadWeightChart(){
+  // ✅ Si le graphique existe déjà, on ne recharge rien
+  if (weightChart) {
+    return;
+  }
+
+  const loader = document.getElementById('weightLoader');
+
+  // 👀 Afficher le loader avant la requête
+  if (loader) loader.classList.add('visible');
+  if (weightLoaderAnim) weightLoaderAnim.play();
+
   try{
     const clientId = (window.__CLIENT_ID__ || '').trim();
     const url = GAS_URL + '?action=weights'
@@ -751,7 +785,14 @@ async function loadWeightChart(){
     console.error('loadWeightChart error:', err);
     renderWeightChart([]);
   }
+
+  // 🧹 Cacher le loader une fois le graphe prêt (ou en erreur)
+  if (loader) loader.classList.remove('visible');
+  if (weightLoaderAnim) weightLoaderAnim.stop();
 }
+
+
+
 
 
 function renderWeightChart(points){
@@ -823,12 +864,41 @@ function renderWeightChart(points){
 }
 
 
-
-
-
-
 // ───────── Graphique sommeil (durée en heures) ─────────
 let sleepChart = null;
+let sleepLoaderAnim = null; // animation Lottie du sommeil
+
+
+function initSleepLoader() {
+  const container = document.getElementById('sleepAnim');
+  if (!container || typeof lottie === 'undefined') return;
+
+  sleepLoaderAnim = lottie.loadAnimation({
+    container: container,
+    renderer: 'svg',
+    loop: true,
+    autoplay: false,
+    path: './animations/loading.json' // ton fichier JSON
+  });
+}
+
+// ===========================
+//  Loader Lottie – Poids
+// ===========================
+function initWeightLoader() {
+  const container = document.getElementById('weightAnim');
+  if (!container || typeof lottie === 'undefined') return;
+
+  weightLoaderAnim = lottie.loadAnimation({
+    container: container,
+    renderer: 'svg',
+    loop: true,
+    autoplay: false,
+    path: './animations/loading.json'
+  });
+}
+
+
 
 function hoursToLabel(h){
   const hh = Math.floor(h);
@@ -837,7 +907,18 @@ function hoursToLabel(h){
 }
 
 async function loadSleepChart(){
-  try{
+  // ✅ Si le graphique existe déjà, on ne recharge rien
+  if (sleepChart) {
+    return;
+  }
+
+  const loader = document.getElementById('sleepLoader');
+
+  // 👀 Afficher le loader avant la requête
+  if (loader) loader.classList.add('visible');
+  if (sleepLoaderAnim) sleepLoaderAnim.play();
+
+  try {
     const clientId = (window.__CLIENT_ID__ || '').trim();
     const url = GAS_URL + '?action=sleep'
       + (SHEET_TAB ? ('&sheet=' + encodeURIComponent(SHEET_TAB)) : '')
@@ -849,11 +930,18 @@ async function loadSleepChart(){
       if (json && json.ok && Array.isArray(json.data)) data = json.data;
     }
     renderSleepChart(data);
-  }catch(err){
+  } catch (err) {
     console.error('loadSleepChart error:', err);
     renderSleepChart([]);
   }
+
+  // 🧹 Cacher le loader une fois le graphe prêt (ou en erreur)
+  if (loader) loader.classList.remove('visible');
+  if (sleepLoaderAnim) sleepLoaderAnim.stop();
 }
+
+
+
 
 
 function renderSleepChart(points){
@@ -963,8 +1051,34 @@ function renderSleepChart(points){
 // ───────── Graphique pas (barres) ─────────
 let stepsChart = null;
 
+// ───────── Loader Lottie – Pas ─────────
+let stepsLoaderAnim = null;
+
+function initStepsLoader() {
+  const container = document.getElementById('stepsAnim');
+  if (!container || typeof lottie === 'undefined') return;
+
+  stepsLoaderAnim = lottie.loadAnimation({
+    container: container,
+    renderer: 'svg',
+    loop: true,
+    autoplay: false,
+    path: './animations/loading.json'
+  });
+}
+
 async function loadStepsChart(){
-  try{
+  const loader = document.getElementById('stepsLoader');
+
+  // 👀 Afficher le loader SEULEMENT si le graphique n'existe pas encore
+  if (!stepsChart && loader) {
+    loader.classList.add('visible');
+  }
+  if (!stepsChart && stepsLoaderAnim) {
+    stepsLoaderAnim.play();
+  }
+
+  try {
     const clientId = (window.__CLIENT_ID__ || '').trim();
     const url = GAS_URL + '?action=steps'
       + (SHEET_TAB ? ('&sheet=' + encodeURIComponent(SHEET_TAB)) : '')
@@ -976,11 +1090,20 @@ async function loadStepsChart(){
       if (json && json.ok && Array.isArray(json.data)) data = json.data;
     }
     renderStepsChart(data);
-  }catch(err){
+  } catch (err) {
     console.error('loadStepsChart error:', err);
     renderStepsChart([]);
   }
+
+  // 🧹 Cacher le loader après le rendu (ou en cas d’erreur)
+  if (loader) {
+    loader.classList.remove('visible');
+  }
+  if (stepsLoaderAnim) {
+    stepsLoaderAnim.stop();
+  }
 }
+
 
 function renderStepsChart(points){
   const badge     = document.getElementById('lastStepsBadge');
@@ -1021,19 +1144,14 @@ function renderStepsChart(points){
   }
 
   // Affichage du graphe
-  if (stepsChart) stepsChart.destroy();
   stepsChart = new Chart(canvas, {
-    type: 'line',
+    type: 'bar',
     data: {
       labels,
       datasets: [{
         data: values,
-        borderWidth: 2,
-        tension: 0.35,
-        pointRadius: 3,
-        pointHoverRadius: 4,
-        borderColor: '#4da6ff',
-        pointBackgroundColor: '#52e0c8'
+        borderWidth: 0,
+        backgroundColor: '#4da6ff'   // couleur barre
       }]
     },
     options: {
@@ -1043,12 +1161,15 @@ function renderStepsChart(points){
       scales: {
         x: { grid: { display: false } },
         y: {
-          ticks: { callback: v => v.toLocaleString('fr-FR') },
+          ticks: {
+            callback: v => v.toLocaleString('fr-FR')
+          },
           grid: { color: 'rgba(0,0,0,.08)' }
         }
       }
     }
   });
+
 }
 
 
@@ -1074,21 +1195,26 @@ window.normalizeHeaders = window.normalizeHeaders || function(headers){
 
 // Ouvre la page Nutrition en gérant 1 jour / plusieurs jours
 async function openNutritionPage(){
-  const box  = document.getElementById('nutriContent');
-  const meta = document.getElementById('nutriMeta');
-  const days = document.getElementById('nutriDays'); // conteneur des boutons Jours
-
+  const box   = document.getElementById('nutriContent');
+  const meta  = document.getElementById('nutriMeta');
+  const days  = document.getElementById('nutriDays');
+  const loader = document.getElementById('nutriLoader');
   if (!box) return;
-  if (!days) {
-    // Sécurité : s’il n’y a pas de conteneur, on affiche juste la feuille par défaut
-    await loadNutrition('Nutrition');
-    return;
+
+  // 🔥 1) Afficher le loader IMMÉDIATEMENT
+  if (loader) loader.classList.add('visible');
+  if (typeof nutriLoaderAnim !== 'undefined' && nutriLoaderAnim) {
+    nutriLoaderAnim.play();
   }
 
-  box.innerHTML = '<p class="note">Chargement…</p>';
-
   try {
-    // On charge la liste des onglets Nutrition une seule fois
+    // Si pas de barre de jours, on charge juste l’onglet par défaut
+    if (!days) {
+      await loadNutrition('Nutrition');
+      return;
+    }
+
+    // Charger la liste des onglets Nutrition une seule fois
     if (!nutrTabsLoaded) {
       const clientId = (window.__CLIENT_ID__ || '').trim();
       let url = GAS_URL + '?action=nutrition_tabs';
@@ -1103,7 +1229,7 @@ async function openNutritionPage(){
       nutrTabsLoaded = true;
     }
 
-    // Aucun onglet Nutrition -> message
+    // Aucun onglet Nutrition
     if (!nutrTabs || nutrTabs.length === 0){
       days.innerHTML = '';
       box.innerHTML = '<p class="note">Aucun onglet Nutrition trouvé.</p>';
@@ -1111,7 +1237,7 @@ async function openNutritionPage(){
       return;
     }
 
-    // Un seul onglet -> pas de boutons "Jour X"
+    // Un seul onglet
     if (nutrTabs.length === 1){
       days.innerHTML = '';
       if (meta) meta.textContent = '1 jour';
@@ -1119,7 +1245,7 @@ async function openNutritionPage(){
       return;
     }
 
-    // Plusieurs onglets -> créer les boutons "Jour 1 / Jour 2 / ..."
+    // Plusieurs onglets -> boutons Jour 1 / Jour 2 / ...
     let html = '';
     nutrTabs.forEach((name, idx) => {
       const label = 'Jour ' + (idx + 1);
@@ -1135,17 +1261,24 @@ async function openNutritionPage(){
     days.innerHTML = html;
     if (meta) meta.textContent = nutrTabs.length + ' jours';
 
-    // Sélection par défaut = premier onglet
+    // Sélection par défaut
     if (nutrTabs[0]) {
       window.selectNutritionDay(nutrTabs[0]);
     }
 
-  } catch(err){
+  } catch (err) {
     console.error('openNutritionPage error:', err);
     box.innerHTML = '<p class="note err">Erreur lors du chargement de la nutrition.</p>';
     if (meta) meta.textContent = 'Erreur';
+  } finally {
+    // ✅ 2) Couper le loader quand tout est fini (succès ou erreur)
+    if (loader) loader.classList.remove('visible');
+    if (typeof nutriLoaderAnim !== 'undefined' && nutriLoaderAnim) {
+      nutriLoaderAnim.stop();
+    }
   }
 }
+
 
 // Fonction globale pour changer de jour
 window.selectNutritionDay = function(sheetName){
@@ -1163,6 +1296,24 @@ window.selectNutritionDay = function(sheetName){
   loadNutrition(sheetName);
 };
 
+// ===========================
+//  Loader Lottie – Nutrition
+// ===========================
+let nutriLoaderAnim = null;
+
+function initNutriLoader() {
+  const container = document.getElementById('nutriAnim');
+  if (!container || typeof lottie === 'undefined') return;
+
+  nutriLoaderAnim = lottie.loadAnimation({
+    container: container,
+    renderer: 'svg',
+    loop: true,
+    autoplay: false,
+    path: './animations/loading.json' // même fichier que les autres loaders
+  });
+}
+
 
 // ───────── Nutrition : chargement + rendu par repas (cartes) ─────────
 // Pour gérer plusieurs onglets "Nutrition", "Nutrition 2", etc.
@@ -1172,11 +1323,17 @@ let nutrLoaded = false;
 let currentNutritionSheet = 'Nutrition'; // onglet par défaut
 
 async function loadNutrition(sheetName){
-  const box  = document.getElementById('nutriContent');
-  const meta = document.getElementById('nutriMeta');
+  const box    = document.getElementById('nutriContent');
+  const meta   = document.getElementById('nutriMeta');
+  const loader = document.getElementById('nutriLoader');
   if (!box) return;
 
-  box.innerHTML = '<p class="note">Chargement…</p>';
+  // 🌀 Afficher le loader
+  if (loader) loader.classList.add('visible');
+  if (nutriLoaderAnim) nutriLoaderAnim.play();
+
+  // On vide le contenu pendant le chargement
+  box.innerHTML = '';
 
   // Si on appelle loadNutrition('Nutrition 2'), on met à jour l’onglet courant
   if (sheetName) {
@@ -1197,27 +1354,26 @@ async function loadNutrition(sheetName){
     if (!json.ok) throw new Error(json.error || 'Réponse Apps Script invalide');
 
     const { headers, rows } = json;
-    // ⬅️ à partir d'ici tu gardes TOUT le reste de ton code actuel (helpers, parsing, rendu)
-
-    
 
     // helpers
-    const headersNorm = normalizeHeaders(headers);
-    const stripAcc = s => String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    const headersNorm  = normalizeHeaders(headers);
+    const stripAcc     = s => String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
     const headersAscii = headersNorm.map(stripAcc);
     const idx = {
-      alim: headersAscii.indexOf('aliments'),
+      alim:    headersAscii.indexOf('aliments'),
       portion: headersAscii.findIndex(h => h.startsWith('portion')),
-      kcal: headersAscii.indexOf('calories'),
-      pro: headersAscii.indexOf('proteines'),
-      glu: headersAscii.indexOf('glucides'),
-      lip: headersAscii.indexOf('lipides')
+      kcal:    headersAscii.indexOf('calories'),
+      pro:     headersAscii.indexOf('proteines'),
+      glu:     headersAscii.indexOf('glucides'),
+      lip:     headersAscii.indexOf('lipides')
     };
     const toNum = v => {
       const n = Number(String(v??'').replace(',', '.').trim());
       return Number.isFinite(n) ? n : NaN;
     };
-    const fmt = n => Number.isFinite(n) ? n.toLocaleString('fr-FR', { maximumFractionDigits: 1 }) : '—';
+    const fmt = n => Number.isFinite(n)
+      ? n.toLocaleString('fr-FR', { maximumFractionDigits: 1 })
+      : '—';
 
     // 1) parser lignes -> repas + objectifs
     const meals = [];
@@ -1233,7 +1389,6 @@ async function loadNutrition(sheetName){
 
       // fin des repas : bloc OBJECTIF
       if (hasWord(r, 'OBJECTIF')){
-        // format observé : ligne "OBJECTIF", ligne labels, ligne valeurs
         const vals = rows[i+2] || [];
         objectives = {
           kcal: toNum(vals[idx.kcal]),
@@ -1245,7 +1400,6 @@ async function loadNutrition(sheetName){
       }
 
       const a = String(r[idx.alim] || '').trim();
-      // ligne Total => clôt le repas
       if (a.toLowerCase() === 'total'){
         const tot = {
           kcal: toNum(r[idx.kcal]),
@@ -1254,7 +1408,6 @@ async function loadNutrition(sheetName){
           lip:  toNum(r[idx.lip]),
         };
         const hasItems = current.items.length > 0;
-        // on n'ajoute que si repas non vide
         if (hasItems){
           current.total = tot;
           current.name  = `Repas ${mealIndex}`;
@@ -1265,7 +1418,6 @@ async function loadNutrition(sheetName){
         continue;
       }
 
-      // ligne aliment (non vide et pas "Total")
       if (a && a.toLowerCase() !== 'total'){
         current.items.push({
           name: a,
@@ -1293,15 +1445,19 @@ async function loadNutrition(sheetName){
             <div class="meal-body">
               ${m.items.map(it => `
                 <div class="meal-row">
-                  <div class="food">
+                  <div class="meal-row-top">
                     <div class="food-name">${escapeHtml(it.name)}</div>
-                    <div class="food-portion">${Number.isFinite(it.portion) ? fmt(it.portion) : '—'} g</div>
                   </div>
-                  <div class="macros">
-                    <span class="mc-kcal">${fmt(it.kcal)} kcal</span>
-                    <span class="mc-pro">${fmt(it.pro)}P</span>
-                    <span class="mc-glu">${fmt(it.glu)}G</span>
-                    <span class="mc-lip">${fmt(it.lip)}L</span>
+                  <div class="meal-row-bottom">
+                    <div class="food-portion">
+                      ${Number.isFinite(it.portion) ? fmt(it.portion) : '—'} g
+                    </div>
+                    <div class="macros">
+                      <span class="mc-kcal">${fmt(it.kcal)} kcal</span>
+                      <span class="mc-pro">${fmt(it.pro)}P</span>
+                      <span class="mc-glu">${fmt(it.glu)}G</span>
+                      <span class="mc-lip">${fmt(it.lip)}L</span>
+                    </div>
                   </div>
                 </div>`).join('')}
             </div>
@@ -1322,7 +1478,6 @@ async function loadNutrition(sheetName){
                 </span>
               </div>` : ''
             }
-
           </div>`;
       });
 
@@ -1342,15 +1497,19 @@ async function loadNutrition(sheetName){
       }
     }
 
-
     box.innerHTML = html;
     nutrLoaded = true;
 
-  }catch(err){
+  } catch(err){
     console.error('loadNutrition error:', err);
     box.innerHTML = `<p class="err">Erreur nutrition : ${String(err.message || err)}</p>`;
+  } finally {
+    // 🧹 On coupe le loader quoi qu’il arrive
+    if (loader) loader.classList.remove('visible');
+    if (nutriLoaderAnim) nutriLoaderAnim.stop();
   }
 }
+
 
 
 
@@ -1417,3 +1576,29 @@ document.addEventListener('keydown', (e) => {
     }
   }
 });
+
+setInterval(() => {
+  const version = document.getElementById("appVersion");
+  if (!version) return;
+
+  const isTab1 = document.querySelector("#tab1")?.classList.contains("active");
+
+  const bilanVisible   = !document.getElementById("bilanPanel")?.classList.contains("hidden");
+  const profileVisible = !document.getElementById("profilePanel")?.classList.contains("hidden");
+  const qaVisible      = !document.getElementById("qaPanel")?.classList.contains("hidden");
+  const todoVisible    = document.getElementById("tab2-todo")
+                        ? document.querySelector("#tab2-todo")?.classList.contains("active")
+                        : false;
+
+  // RÈGLE SIMPLE :
+  // 👉 Version visible seulement si on est dans TAB 1 et aucun panneau interne
+  const shouldShow =
+    isTab1 &&
+    bilanVisible &&
+    !profileVisible &&
+    !qaVisible &&
+    !todoVisible;
+
+  version.style.display = shouldShow ? "block" : "none";
+}, 200);
+
