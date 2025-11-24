@@ -718,16 +718,19 @@ function checkBilanStatusAtStartup() {
 
 // ---------- init ----------
 logDiag('JS chargé', true);
+
+// 🧠 Initialisation "logique" (UI, bouton bilan...)
 document.addEventListener('DOMContentLoaded', () => {
   refreshDateBadge();
   checkBilanStatusAtStartup();
+});
 
-  // Loaders Lottie
+// 🌀 Initialisation des loaders Lottie (quand TOUT est chargé, y compris lottie.min.js)
+window.addEventListener('load', () => {
   initSleepLoader();
   initWeightLoader();
-  initStepsLoader();   // 🌀 pas
-  initNutriLoader();   // 🥗 Nutrition
 });
+
 
 
 // ───────── Sous-onglets onglet 2 ─────────
