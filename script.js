@@ -911,12 +911,12 @@ function hoursToLabel(h){
 }
 
 async function loadSleepChart(){
-  // ✅ Si le graphique existe déjà, on ne recharge rien
-  if (sleepChart) {
-    return;
-  }
-
   const loader = document.getElementById('sleepLoader');
+
+  // 🌀 Si l’animation n’est pas encore initialisée, on tente maintenant
+  if (!sleepLoaderAnim && typeof lottie !== 'undefined') {
+    initSleepLoader();
+  }
 
   // 👀 Afficher le loader avant la requête
   if (loader) loader.classList.add('visible');
@@ -943,6 +943,7 @@ async function loadSleepChart(){
   if (loader) loader.classList.remove('visible');
   if (sleepLoaderAnim) sleepLoaderAnim.stop();
 }
+
 
 
 
