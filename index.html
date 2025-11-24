@@ -3,7 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.10.2/lottie.min.js"></script>
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 
 
   <!-- CSS externe + cache-buster -->
@@ -386,8 +389,6 @@
     <button type="button" class="tab-btn" data-tab="tab3" onclick="switchTab('tab3', this)">Paramètres</button>
   </nav>
 
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <!-- Service Worker -->
   <script>
@@ -421,6 +422,12 @@
     }
   </script>
   -->
+
+            <!-- Lottie Web (un seul, comme sur Scratch Mouse) -->
+            <script src="https://unpkg.com/lottie-web@latest/build/player/lottie.min.js"></script>
+
+            <!-- Ton script principal -->
+            <script src="./script.js?v=7"></script>
 
 </body>
 </html>
