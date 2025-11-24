@@ -1,6 +1,6 @@
 // ************ CONFIG ************
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbx2AC_cNpPndM772BH_DFG90Vzv8-Ahtp5PYjH0rOkcnwSWzYog0NLZU3Xa8c97tyJRKw/exec';
-alert('VERSION JS ACTUELLE');
+
 
 // 1) Fallback si pas d'id dans l'URL
 var SHEET_TAB = 'Journal';
