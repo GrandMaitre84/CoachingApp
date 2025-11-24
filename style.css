@@ -1110,57 +1110,61 @@ button.primary:disabled {
   box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
-/* ================================
-   🎉 Animation Lottie pour la To-Do
-   ================================ */
 
-/* Conteneur de la carte To-Do en position relative */
-#tab2-todo .card {
-  position: relative;
-}
-
-/* Animation Lottie centrée en overlay */
-#todoAnimation {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(0.8);
-  width: 160px;
-  height: 160px;
-
-  opacity: 0;
-  pointer-events: none; /* ne bloque pas les clics */
-  transition: opacity 0.25s ease, transform 0.25s ease;
-}
-
-#todoAnimation.visible {
-  opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
-}
-
-/* Agrandir spécialement la carte de la To Do List */
-#tab2-todo .card {
-  padding: 20px;
-  min-height: 320px;   /* augmente la hauteur */
-}
 
 /* ============================
-   🎬 Loader Lottie pour graphiques
+   🎬 Loader Lottie – graphiques
    ============================ */
 
 .chart-lottie-loader {
   position: absolute;
-  inset: 0;              /* top:0; left:0; width:100%; height:100%; */
-  display: none;         /* caché par défaut */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  display: flex;                /* ⚠️ PLUS de display:none */
   justify-content: center;
   align-items: center;
 
-  background: rgba(255,255,255,0.8); /* léger voile blanc */
+  background: rgba(255,255,255,0.8);
   z-index: 10;
+
+  opacity: 0;                   /* invisible par défaut */
+  pointer-events: none;         /* ne bloque pas les clics */
+  transition: opacity 0.2s ease;
 }
 
 .chart-lottie-loader.visible {
-  display: flex;         /* visible quand .visible est ajouté par JS */
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ============================
+   ✅ Loader Lottie – To Do List
+   ============================ */
+
+.todo-lottie {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 140px;
+  height: 140px;
+
+  display: flex;                /* toujours là aussi */
+  justify-content: center;
+  align-items: center;
+
+  opacity: 0;
+  pointer-events: none;
+  z-index: 20;
+  transition: opacity 0.2s ease;
+}
+
+.todo-lottie.visible {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .chart-lottie-player {
