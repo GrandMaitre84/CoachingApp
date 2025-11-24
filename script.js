@@ -404,8 +404,8 @@ function playTodoAnimation() {
     renderer: 'svg',
     loop: false,
     autoplay: true,
-  path: './animations/validate.json'
-});
+    path: './animations/validate.json'
+  });
 
   // Afficher brièvement le conteneur
   animContainer.classList.add('visible');
@@ -415,6 +415,7 @@ function playTodoAnimation() {
     animContainer.classList.remove('visible');
   }, 1200);
 }
+
 
 function completeTodo(checkbox) {
   if (!checkbox.checked) return;
