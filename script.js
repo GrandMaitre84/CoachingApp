@@ -393,28 +393,12 @@ function addTodo() {
 
 function playTodoAnimation() {
   const animContainer = document.getElementById('todoAnimation');
-  if (!animContainer) return;
+  if (!animContainer || !todoAnim) return;
 
-  // Nettoyer ancienne animation si elle existe
-  animContainer.innerHTML = "";
-
-  // Lancer Lottie
-  lottie.loadAnimation({
-    container: animContainer,
-    renderer: 'svg',
-    loop: false,
-    autoplay: true,
-    path: './animations/validate.json'
-  });
-
-  // Afficher brièvement le conteneur
   animContainer.classList.add('visible');
-
-  // Le cacher après 1200ms
-  setTimeout(() => {
-    animContainer.classList.remove('visible');
-  }, 1200);
+  todoAnim.goToAndPlay(0, true);
 }
+
 
 
 function completeTodo(checkbox) {
@@ -729,9 +713,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // 🌀 Initialisation des loaders Lottie (quand TOUT est chargé, y compris lottie.min.js)
 window.addEventListener('load', () => {
+  if (typeof lottie === 'undefined') {
+    console.warn('Lottie non chargé');
+    return;
+  }
+
   initSleepLoader();
   initWeightLoader();
+  initTodoAnim();   // 🔥 on ajoute ça
 });
+
 
 
 
@@ -1176,6 +1167,27 @@ function renderStepsChart(points){
     }
   });
 
+}
+
+// Loader Lottie – TODO
+let todoAnim = null;
+
+function initTodoAnim() {
+  const container = document.getElementById('todoAnimation');
+  if (!container || typeof lottie === 'undefined') return;
+
+  todoAnim = lottie.loadAnimation({
+    container: container,
+    renderer: 'svg',
+    loop: false,
+    autoplay: false,
+    path: './animations/validate.json'
+  });
+
+  // Quand l’anim se termine, on cache le conteneur
+  todoAnim.addEventListener('complete', () => {
+    container.classList.remove('visible');
+  });
 }
 
 
