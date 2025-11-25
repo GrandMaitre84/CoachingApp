@@ -391,35 +391,32 @@ function addTodo() {
   wrap.appendChild(div);
 }
 
-// ========= LOTTIE TODO – init propre =========
+// ───────── Lottie – TODO list (style Scratch Mouse) ─────────
 let todoAnim = null;
 
 function initTodoAnim() {
   const container = document.getElementById('todoAnimation');
-  if (!container) {
-    console.warn('todoAnimation introuvable dans le DOM');
-    return;
-  }
-  if (typeof lottie === 'undefined') {
-    console.warn('Lottie non chargé pour TODO');
+  if (!container || typeof lottie === 'undefined') {
+    console.warn('TODO Lottie : pas de container ou lottie pas dispo');
     return;
   }
 
-  // Si déjà initialisé, on ne recrée pas
-  if (todoAnim) return;
+  // On initialise UNE SEULE FOIS
+  if (!todoAnim) {
+    todoAnim = lottie.loadAnimation({
+      container: container,
+      renderer: 'svg',
+      loop: false,
+      autoplay: false,
+      path: './animations/validate.json'
+    });
 
-  todoAnim = lottie.loadAnimation({
-    container: container,
-    renderer: 'svg',
-    loop: false,
-    autoplay: false,
-    path: './animations/validate.json'
-  });
-
-  todoAnim.addEventListener('complete', () => {
-    container.classList.remove('visible');
-  });
+    todoAnim.addEventListener('complete', () => {
+      container.classList.remove('visible');
+    });
+  }
 }
+
 
 
 function playTodoAnimation() {
@@ -1592,16 +1589,6 @@ function goToTab(n) {
 
 window.goToTab = goToTab;
 
-
-// Service Worker
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("/sw.js")
-      .then(reg => console.log("✅ Service Worker enregistré :", reg))
-      .catch(err => console.error("❌ Service Worker erreur :", err));
-  });
-}
 
 // ===== MODE TEST : Reset complet si on appuie sur la touche A =====
 document.addEventListener('keydown', (e) => {
