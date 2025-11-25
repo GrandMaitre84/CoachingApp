@@ -391,6 +391,37 @@ function addTodo() {
   wrap.appendChild(div);
 }
 
+// ========= LOTTIE TODO – init propre =========
+let todoAnim = null;
+
+function initTodoAnim() {
+  const container = document.getElementById('todoAnimation');
+  if (!container) {
+    console.warn('todoAnimation introuvable dans le DOM');
+    return;
+  }
+  if (typeof lottie === 'undefined') {
+    console.warn('Lottie non chargé pour TODO');
+    return;
+  }
+
+  // Si déjà initialisé, on ne recrée pas
+  if (todoAnim) return;
+
+  todoAnim = lottie.loadAnimation({
+    container: container,
+    renderer: 'svg',
+    loop: false,
+    autoplay: false,
+    path: './animations/validate.json'
+  });
+
+  todoAnim.addEventListener('complete', () => {
+    container.classList.remove('visible');
+  });
+}
+
+
 function playTodoAnimation() {
   const animContainer = document.getElementById('todoAnimation');
   if (!animContainer) return;
@@ -724,9 +755,16 @@ window.addEventListener('load', () => {
     return;
   }
 
+  // Loaders existants
   initSleepLoader();
   initWeightLoader();
+  initStepsLoader();
+  initNutriLoader();
+
+  // ✅ Init de l’animation TODO (comme Scratch Mouse pour le badge)
+  initTodoAnim();
 });
+
 
 
 
@@ -1173,26 +1211,6 @@ function renderStepsChart(points){
   });
 
 }
-
-// ───────── Lottie – TODO list (logique identique à Scratch Mouse) ─────────
-let todoAnim = null;
-const todoAnimContainer = document.getElementById('todoAnimation');
-
-if (todoAnimContainer && typeof lottie !== 'undefined') {
-  todoAnim = lottie.loadAnimation({
-    container: todoAnimContainer,
-    renderer: 'svg',
-    loop: false,
-    autoplay: false,
-    path: './animations/validate.json'
-  });
-
-  // Quand l’anim est finie, on cache le conteneur
-  todoAnim.addEventListener('complete', () => {
-    todoAnimContainer.classList.remove('visible');
-  });
-}
-
 
 
 // Helper manquant : échappe le HTML pour l'affichage sécurisé
