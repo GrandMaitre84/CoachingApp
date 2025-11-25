@@ -944,12 +944,6 @@ button.primary:disabled {
   display: none !important;
 }
 
-.todo-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 6px 0;
-}
 
 .todo-item {
   display: flex;
@@ -993,10 +987,15 @@ button.primary:disabled {
   width: 100%;
 }
 
-/* Conteneur normal : pas centré (pour les tâches) */
 .todo-wrap {
-  width: 100%;
+  position: relative;        /* 🔑 l’animation se centre dans CE bloc */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 6px 0 1rem 0;
+  min-height: 30vh;
 }
+
 
 /* Centrer seulement le message vide */
 .todo-wrap .note {
@@ -1005,6 +1004,8 @@ button.primary:disabled {
   padding: 20px 0;
   color: var(--muted);
 }
+
+
 
 /* Ligne d'aliment : un peu plus aérée */
 .meal-row {
