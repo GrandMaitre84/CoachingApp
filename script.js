@@ -393,11 +393,17 @@ function addTodo() {
 
 function playTodoAnimation() {
   const animContainer = document.getElementById('todoAnimation');
-  if (!animContainer || !todoAnim) return;
+  if (!animContainer) return;
 
+  // On rend le conteneur visible
   animContainer.classList.add('visible');
-  todoAnim.goToAndPlay(0, true);
+
+  // On joue l'anim depuis le début (comme le badge dans ScratchMouse)
+  if (todoAnim) {
+    todoAnim.goToAndPlay(0, true);
+  }
 }
+
 
 
 
@@ -720,7 +726,6 @@ window.addEventListener('load', () => {
 
   initSleepLoader();
   initWeightLoader();
-  initTodoAnim();   // 🔥 on ajoute ça
 });
 
 
@@ -1169,26 +1174,25 @@ function renderStepsChart(points){
 
 }
 
-// Loader Lottie – TODO
+// ───────── Lottie – TODO list (logique identique à Scratch Mouse) ─────────
 let todoAnim = null;
+const todoAnimContainer = document.getElementById('todoAnimation');
 
-function initTodoAnim() {
-  const container = document.getElementById('todoAnimation');
-  if (!container || typeof lottie === 'undefined') return;
-
+if (todoAnimContainer && typeof lottie !== 'undefined') {
   todoAnim = lottie.loadAnimation({
-    container: container,
+    container: todoAnimContainer,
     renderer: 'svg',
     loop: false,
     autoplay: false,
     path: './animations/validate.json'
   });
 
-  // Quand l’anim se termine, on cache le conteneur
+  // Quand l’anim est finie, on cache le conteneur
   todoAnim.addEventListener('complete', () => {
-    container.classList.remove('visible');
+    todoAnimContainer.classList.remove('visible');
   });
 }
+
 
 
 // Helper manquant : échappe le HTML pour l'affichage sécurisé
