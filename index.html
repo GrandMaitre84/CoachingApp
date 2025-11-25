@@ -29,8 +29,6 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
-  <!-- Script principal + cache-buster -->
-  <script src="./script.js?v=7" defer></script>
 </head>
 
 <body>
@@ -402,7 +400,7 @@
   <script>
   if ('serviceWorker' in navigator) {
     // ⚠️ Mettez à jour ce numéro à chaque release
-    const SW_VERSION = 'v7';
+    const SW_VERSION = 'v10';
     navigator.serviceWorker.register(`./sw.js?${SW_VERSION}`).then(reg => {
       setInterval(() => reg.update(), 60 * 60 * 1000);
       let refreshing = false;
@@ -425,10 +423,8 @@
 
             <!-- Lottie Web (un seul, comme sur Scratch Mouse) -->
             <script src="https://unpkg.com/lottie-web@latest/build/player/lottie.min.js"></script>
-
-            
             <!-- Ton script principal -->
-            <script src="./script.js?v=7"></script>
+            <script src="./script.js?v=10"></script>
 
 </body>
 </html>
