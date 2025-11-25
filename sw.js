@@ -1,5 +1,5 @@
 // SW auto-mise à jour avec stratégie réseau d'abord pour les pages HTML
-const CACHE = "bilan-v9"; // change le numéro à chaque nouvelle version
+const CACHE = "bilan-v10"; // change le numéro à chaque nouvelle version
 
 // On NE MET PAS index.html dans la liste, pour éviter de garder une vieille version
 const ASSETS = [
