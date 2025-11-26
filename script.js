@@ -57,10 +57,17 @@ var CLIENT_SHEETS = {
     const tag = document.getElementById('clientTag');
     if (tag) tag.textContent = window.__CLIENT_ID__;
 
+    // 🔍 DEBUG VISIBLE
+    const dbg = document.getElementById('debugClient');
+    if (dbg) {
+      dbg.textContent = `client_id = "${window.__CLIENT_ID__}", search = "${location.search}"`;
+    }
+
   } catch (e) {
     console.warn('initClient error', e);
   }
 })();
+
 
 
 
