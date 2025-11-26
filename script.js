@@ -1,3 +1,53 @@
+// ─────────🔊 AUDIO GLOBAL (Web Audio) ─────────
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+// ⚠️ Débloquer l'audio au premier tap sur mobile
+document.addEventListener('touchstart', () => {
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume().catch(() => {});
+  }
+}, { once: true });
+
+document.addEventListener('click', () => {
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume().catch(() => {});
+  }
+}, { once: true });
+
+// Fichiers son (dossier "sounds")
+const SFX_FILES = {
+  click:     'sounds/click.mp3',
+  clickTab:  'sounds/click-tab.mp3'
+};
+
+const sfxBuffers = {};
+
+// Charge un son en mémoire
+async function loadSfx(name, url) {
+  try {
+    const resp = await fetch(url);
+    const buf  = await resp.arrayBuffer();
+    sfxBuffers[name] = await audioCtx.decodeAudioData(buf);
+  } catch (e) {
+    console.warn(`Erreur chargement SFX "${name}" :`, e);
+  }
+}
+
+// Préchargement
+Promise.all(
+  Object.entries(SFX_FILES).map(([n, u]) => loadSfx(n, u))
+);
+
+// Joue un son par son nom
+function playSfx(name) {
+  const buf = sfxBuffers[name];
+  if (!buf) return; // pas encore chargé
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf;
+  src.connect(audioCtx.destination);
+  src.start(0);
+}
+
 // ************ CONFIG ************
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbx2AC_cNpPndM772BH_DFG90Vzv8-Ahtp5PYjH0rOkcnwSWzYog0NLZU3Xa8c97tyJRKw/exec';
 
@@ -1681,30 +1731,15 @@ setInterval(() => {
 }, 200);
 
 
-// 🔊 CLICK SOUND EFFECT — clic normal
+// 🔊 CLICK SOUND EFFECT — version Web Audio (moins de latence)
 document.addEventListener("click", (e) => {
-  const normalSound = document.getElementById("clickSound");
-  const tabSound = document.getElementById("clickTabSound");
-
-  if (!normalSound || !tabSound) return;
-
-  // 🎵 1. Clic sur la nav barre → SON TAB
+  // Clic sur la nav barre ou les boutons d’onglet → son spécial
   if (e.target.closest(".bottom-nav") || e.target.closest(".tab-btn")) {
-    try {
-      tabSound.currentTime = 0;
-      tabSound.play();
-    } catch (err) {
-      console.warn("Audio tab blocked:", err);
-    }
-    return; // ⛔ On stoppe pour ne pas jouer le clic normal
+    playSfx('clickTab');
+    return;
   }
 
-  // 🎵 2. Tous les autres clics → SON NORMAL
-  try {
-    normalSound.currentTime = 0;
-    normalSound.play();
-  } catch (err) {
-    console.warn("Audio blocked:", err);
-  }
+  // Tous les autres clics → son normal
+  playSfx('click');
 });
 
