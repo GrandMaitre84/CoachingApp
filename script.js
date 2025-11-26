@@ -13,38 +13,55 @@ var CLIENT_SHEETS = {
 };
 
 // 3) Lecture de l'id dans l'URL (ou depuis localStorage) et choix de la feuille
-(function initClient(){
+// 1) Fallback si pas d'id dans l'URL
+var SHEET_TAB = 'Journal';
+
+// 2) (Optionnel) Mapping id -> nom d'onglet (si tu veux décorréler)
+var CLIENT_SHEETS = {
+  // 'alban': 'ALBAN',
+  // 'marvin': 'MARVIN',
+  // 'christophe': 'CHRISTOPHE',
+};
+
+// 3) Lecture de l'id dans l'URL OU depuis localStorage
+(function initClient() {
   try {
-    const params      = new URLSearchParams(location.search);
-    const urlIdRaw    = params.get('id');                 // id passé dans l’URL
-    const storedIdRaw = localStorage.getItem('client_id'); // id déjà mémorisé
+    const params   = new URLSearchParams(location.search);
+    const urlIdRaw = params.get('id') || '';
+    const urlId    = (urlIdRaw || '').trim();
 
-    // ✅ Priorité à l'id de l'URL si présent, sinon on prend celui du localStorage
-    let id = (urlIdRaw && urlIdRaw.trim())
-          || (storedIdRaw && storedIdRaw.trim())
-          || '';
+    let id = urlId;
 
+    // 🔁 Si PAS d'id dans l'URL → on essaie de reprendre celui en localStorage
+    if (!id) {
+      const stored = localStorage.getItem('client_id') || '';
+      id = stored.trim();
+    }
+
+    // ✅ Si on a un id (URL ou storage)
     if (id) {
       const key = id.toLowerCase();
 
-      // (optionnel) si tu veux mapper des onglets spécifiques par client
+      // (si un jour tu veux faire un onglet par client)
       SHEET_TAB = CLIENT_SHEETS[key] || SHEET_TAB;
 
-      // On mémorise / rafraîchit l'id pour les prochaines ouvertures (PWA incluse)
+      // On le (re)sauvegarde, ça "rafraîchit" l'ID
       localStorage.setItem('client_id', id);
+      window.__CLIENT_ID__ = id;
+    } else {
+      // Aucun id => mode par défaut
+      window.__CLIENT_ID__ = '(par défaut)';
     }
 
-    // Exporte l'id pour tout le reste du script
-    window.__CLIENT_ID__ = id || '';
-
+    // Petit badge dans l’UI
     const tag = document.getElementById('clientTag');
-    if (tag) {
-      tag.textContent = window.__CLIENT_ID__ || '(par défaut)';
-    }
+    if (tag) tag.textContent = window.__CLIENT_ID__;
+
   } catch (e) {
     console.warn('initClient error', e);
   }
 })();
+
 
 
 var DURATION_AS_TIME_FRACTION = false; // false => "HH:MM", true => fraction de jour (format [h]:mm côté Sheet)
