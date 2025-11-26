@@ -23,50 +23,64 @@ var CLIENT_SHEETS = {
   // 'christophe': 'CHRISTOPHE',
 };
 
-// 3) Lecture de l'id dans l'URL OU depuis localStorage
+// 3) Lecture de l'id dans l'URL OU depuis localStorage (+ fallback PWA)
 (function initClient() {
   try {
     const params   = new URLSearchParams(location.search);
     const urlIdRaw = params.get('id') || '';
     const urlId    = (urlIdRaw || '').trim();
 
+    // 1) On commence par l'id dans l'URL
     let id = urlId;
 
-    // 🔁 Si PAS d'id dans l'URL → on essaie de reprendre celui en localStorage
+    // 2) Sinon on tente ce qu'on a déjà en localStorage
     if (!id) {
       const stored = localStorage.getItem('client_id') || '';
       id = stored.trim();
     }
 
-    // ✅ Si on a un id (URL ou storage)
+    // 3) ⚠️ Cas PWA : start_url = ?source=pwa → jamais d'id dans l'URL
+    //    Si on est dans ce mode et qu'on ne connaît pas encore le client,
+    //    on lui demande une seule fois son code.
+    if (!id && location.search.includes('source=pwa')) {
+      const alreadyAsked = localStorage.getItem('client_id_prompted') === '1';
+      if (!alreadyAsked) {
+        const manual = prompt("Entre ton code client (ex : alban, marvin, etc.) :","");
+        localStorage.setItem('client_id_prompted', '1');
+        if (manual && manual.trim()) {
+          id = manual.trim();
+          localStorage.setItem('client_id', id);
+        }
+      }
+    }
+
+    // 4) Finalisation
     if (id) {
       const key = id.toLowerCase();
-
-      // (si un jour tu veux faire un onglet par client)
       SHEET_TAB = CLIENT_SHEETS[key] || SHEET_TAB;
 
-      // On le (re)sauvegarde, ça "rafraîchit" l'ID
-      localStorage.setItem('client_id', id);
       window.__CLIENT_ID__ = id;
+      localStorage.setItem('client_id', id);
     } else {
-      // Aucun id => mode par défaut
       window.__CLIENT_ID__ = '(par défaut)';
     }
 
-    // Petit badge dans l’UI
+    // Badge visuel dans l'UI
     const tag = document.getElementById('clientTag');
     if (tag) tag.textContent = window.__CLIENT_ID__;
 
-    // 🔍 DEBUG VISIBLE
+    // Debug visible
     const dbg = document.getElementById('debugClient');
     if (dbg) {
-      dbg.textContent = `client_id = "${window.__CLIENT_ID__}", search = "${location.search}"`;
+      dbg.textContent =
+        `client_id = "${window.__CLIENT_ID__}", search = "${location.search}"`;
     }
 
   } catch (e) {
     console.warn('initClient error', e);
   }
 })();
+
 
 
 
