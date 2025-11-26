@@ -29,6 +29,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
+  <audio id="clickSound" src="./sounds/click.mp3" preload="auto"></audio>
+  <audio id="clickTabSound" src="./sounds/click-tab.mp3" preload="auto"></audio>
 </head>
 
 <body>
@@ -380,6 +382,7 @@
 
   </main>
 
+            
   <!-- Barre de navigation -->
   <nav class="bottom-nav">
     <button type="button" class="tab-btn active" data-tab="tab1" onclick="switchTab('tab1', this)">Accueil</button>
@@ -426,5 +429,6 @@
             <!-- Ton script principal -->
             <script src="./script.js?v=10"></script>
 
+            
 </body>
 </html>
