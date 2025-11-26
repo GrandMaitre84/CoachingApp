@@ -404,7 +404,7 @@
   <script>
   if ('serviceWorker' in navigator) {
     // ⚠️ Mettez à jour ce numéro à chaque release
-    const SW_VERSION = 'v11';
+    const SW_VERSION = 'v12';
     navigator.serviceWorker.register(`./sw.js?${SW_VERSION}`).then(reg => {
       setInterval(() => reg.update(), 60 * 60 * 1000);
       let refreshing = false;
