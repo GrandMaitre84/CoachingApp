@@ -14,25 +14,38 @@ var CLIENT_SHEETS = {
 
 // 3) Lecture de l'id dans l'URL (ou depuis localStorage) et choix de la feuille
 (function initClient(){
-  try{
-    const params = new URLSearchParams(location.search);
-    const idRaw = params.get('id') || '';
-    const id = (idRaw || '').trim();
+  try {
+    const params      = new URLSearchParams(location.search);
+    const urlIdRaw    = params.get('id');                 // id passé dans l’URL
+    const storedIdRaw = localStorage.getItem('client_id'); // id déjà mémorisé
 
-    if (id){
+    // ✅ Priorité à l'id de l'URL si présent, sinon on prend celui du localStorage
+    let id = (urlIdRaw && urlIdRaw.trim())
+          || (storedIdRaw && storedIdRaw.trim())
+          || '';
+
+    if (id) {
       const key = id.toLowerCase();
-      // Multi-clients = 1 fichier par client, onglet identique "Journal":
-      SHEET_TAB = CLIENT_SHEETS[key] || SHEET_TAB; // on garde "Journal" par défaut
+
+      // (optionnel) si tu veux mapper des onglets spécifiques par client
+      SHEET_TAB = CLIENT_SHEETS[key] || SHEET_TAB;
+
+      // On mémorise / rafraîchit l'id pour les prochaines ouvertures (PWA incluse)
       localStorage.setItem('client_id', id);
     }
 
-    window.__CLIENT_ID__ = id || '(par défaut)';
+    // Exporte l'id pour tout le reste du script
+    window.__CLIENT_ID__ = id || '';
+
     const tag = document.getElementById('clientTag');
-    if (tag) tag.textContent = window.__CLIENT_ID__;
-  }catch(e){
+    if (tag) {
+      tag.textContent = window.__CLIENT_ID__ || '(par défaut)';
+    }
+  } catch (e) {
     console.warn('initClient error', e);
   }
 })();
+
 
 var DURATION_AS_TIME_FRACTION = false; // false => "HH:MM", true => fraction de jour (format [h]:mm côté Sheet)
 // ********************************
@@ -1628,4 +1641,32 @@ setInterval(() => {
 
   version.style.display = shouldShow ? "block" : "none";
 }, 200);
+
+
+// 🔊 CLICK SOUND EFFECT — clic normal
+document.addEventListener("click", (e) => {
+  const normalSound = document.getElementById("clickSound");
+  const tabSound = document.getElementById("clickTabSound");
+
+  if (!normalSound || !tabSound) return;
+
+  // 🎵 1. Clic sur la nav barre → SON TAB
+  if (e.target.closest(".bottom-nav") || e.target.closest(".tab-btn")) {
+    try {
+      tabSound.currentTime = 0;
+      tabSound.play();
+    } catch (err) {
+      console.warn("Audio tab blocked:", err);
+    }
+    return; // ⛔ On stoppe pour ne pas jouer le clic normal
+  }
+
+  // 🎵 2. Tous les autres clics → SON NORMAL
+  try {
+    normalSound.currentTime = 0;
+    normalSound.play();
+  } catch (err) {
+    console.warn("Audio blocked:", err);
+  }
+});
 
