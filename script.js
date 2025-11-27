@@ -854,29 +854,48 @@ function checkBilanStatusAtStartup() {
 }
 
 
-
 // ---------- init ----------
 logDiag('JS chargé', true);
 
 function submitClientLogin() {
   const input = document.getElementById('loginInput');
-  const val = (input?.value || '').trim().toLowerCase();
+  const raw   = (input && input.value ? input.value : '').trim();
 
-  if (!val) {
+  if (!raw) {
     alert("Merci d’entrer ton code client 😊");
+    if (input) input.focus();
     return;
   }
 
-  // On enregistre
-  window.__CLIENT_ID__ = val;
-  localStorage.setItem('client_id', val);
+  const id = raw.toLowerCase();
 
-  // On masque le popup
-  document.getElementById('loginBox')?.classList.add('hidden');
+  // 🔐 1) Vérifier que l'ID existe bien dans TRAINING_SHEETS
+  const knownIds = Object.keys(TRAINING_SHEETS || {});
+  if (!knownIds.includes(id)) {
+    alert("Ce code client n'existe pas. Vérifie l'orthographe ou demande à ton coach 🙂");
+    if (input) input.focus();
+    return;
+  }
 
-  // Et on continue l'app normalement
-  // (Pas besoin de reload)
+  // 🧠 2) Enregistrer l'ID client
+  window.__CLIENT_ID__ = id;
+  localStorage.setItem('client_id', id);
+
+  // 3) (optionnel) si plus tard tu veux utiliser CLIENT_SHEETS pour l’onglet journal,
+  // tu pourras rajouter ici un mapping, mais pas obligatoire pour l’instant.
+
+  // 🎭 4) Cacher l'écran de login + montrer l'app
+  const panel = document.getElementById('loginPanel');
+  if (panel) panel.classList.add('hidden');
+
+  const main = document.querySelector('main');
+  if (main) main.classList.remove('hidden');
+
+  console.log('Client connecté :', id);
 }
+
+
+
 
 
 // 🧠 Initialisation "logique" (UI, bouton bilan...)
@@ -884,10 +903,13 @@ document.addEventListener('DOMContentLoaded', () => {
   refreshDateBadge();
   checkBilanStatusAtStartup();
 
+  // 🔐 Si aucun client n'est connecté → afficher l'écran de connexion
   if (window.__NEED_LOGIN__) {
-    document.getElementById('loginBox')?.classList.remove('hidden');
+    document.getElementById('loginPanel')?.classList.remove('hidden');
+    document.querySelector('main')?.classList.add('hidden');
   }
 });
+
 
 // 🌀 Initialisation des loaders Lottie (quand TOUT est chargé, y compris lottie.min.js)
 window.addEventListener('load', () => {
@@ -1773,16 +1795,31 @@ window.backFromNutrition = backFromNutrition;
 // ===== MODE TEST : Reset complet si on appuie sur la touche A =====
 document.addEventListener('keydown', (e) => {
   if (e.key.toLowerCase() === 'a') {
-    localStorage.removeItem('bilan_done');
-    alert("🔄 Reset test effectué : bilan réactivé !");
 
+    // 🔄 Reset : bilan du jour
+    localStorage.removeItem('bilan_done');
+
+    // 🚪 Déconnexion test : suppression du client_id
+    localStorage.removeItem('client_id');
+    window.__CLIENT_ID__ = null;
+
+    // UI : réactiver bouton bilan
     const btn = document.getElementById('bilanBtn');
     if (btn) {
       btn.disabled = false;
       btn.classList.remove('disabled');
     }
+
+    // Afficher l'écran de login
+    document.getElementById('loginPanel')?.classList.remove('hidden');
+
+    // Cacher l'app
+    document.querySelector('main')?.classList.add('hidden');
+
+    alert("🔄 Reset + déconnexion effectués !");
   }
 });
+
 
 function openNutritionFromHome() {
   // 1) On active l’onglet "Suivi" dans la nav du bas
