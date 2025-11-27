@@ -29,8 +29,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
-  <audio id="clickSound" src="./sounds/click.mp3" preload="auto"></audio>
-  <audio id="clickTabSound" src="./sounds/click-tab.mp3" preload="auto"></audio>
+
 </head>
 
 <body>
@@ -47,6 +46,8 @@
       <div id="bilanPanel">
         <button id="bilanBtn" class="primary" onclick="openDailyCheckin()">BILAN DU JOUR</button>
         <button id="profileBtn" class="primary" onclick="openProfile()">PROFILE</button>
+        <button class="primary" onclick="openTrainingPage()" style="margin-top: 12px;">TRAINING</button>
+        <button type="button" class="primary" onclick="goToNutrition()">NUTRITION</button>
         <button id="todoBtn" class="primary" onclick="openTodo()">TO DO LIST</button>
 
       </div>
@@ -102,7 +103,7 @@
         </button>
       </div>
 
-
+      
 
       <!-- Panneau PROFIL (caché au départ) -->
       <div id="profilePanel" class="hidden">
@@ -176,7 +177,45 @@
 
       </section>
 
+            <!-- Sous-page : Nutrition -->
+            <section id="tab2-nutrition" class="tab">
+              <button class="back" onclick="backFromNutrition()">
+                ← Retour
+              </button>
 
+
+              <div class="card">
+                <div class="card-header">
+                  <h2>Programme nutrition</h2>
+                  <span id="nutriMeta" class="chip">—</span>
+                </div>
+
+                <!-- 🆕 Boutons Jour 1 / Jour 2 / ... -->
+                <div id="nutriDays" class="nutri-days"></div>
+
+                <!-- 🆕 Wrapper avec loader + contenu -->
+                <div class="nutri-content-wrap" style="position:relative; min-height:140px;">
+                  <!-- Loader Lottie nutrition -->
+                  <div id="nutriLoader" class="chart-lottie-loader">
+                    <div id="nutriAnim" class="chart-lottie-player"></div>
+                  </div>
+
+                  <!-- Contenu des repas -->
+                  <div id="nutriContent"></div>
+                </div>
+              </div>
+            </section>
+
+            <!-- 🏋️ Sous-onglet TRAINING -->
+            <section id="tab2-training" class="tab hidden">
+
+              <button class="back" onclick="backFromTraining()">
+                ← Retour
+              </button>
+
+              <button class="primary full-btn" onclick="openTrainingSheet()">PROGRAMME</button>
+
+            </section>
 
 
     <!-- Onglet 2 : menu -->
@@ -194,10 +233,6 @@
         <button class="tile"
           onclick="switchTab('tab2-steps', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">
           👟PAS
-        </button>
-        <button class="tile"
-          onclick="switchTab('tab2-nutrition', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">
-          🍏NUTRITION
         </button>
       </div>
     </section>
@@ -309,35 +344,7 @@
             </section>
 
 
-            <!-- Sous-page : Nutrition -->
-            <section id="tab2-nutrition" class="tab">
-              <button class="back"
-                onclick="switchTab('tab2', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">
-                ← Retour
-              </button>
-
-              <div class="card">
-                <div class="card-header">
-                  <h2>Programme nutrition</h2>
-                  <span id="nutriMeta" class="chip">—</span>
-                </div>
-
-                <!-- 🆕 Boutons Jour 1 / Jour 2 / ... -->
-                <div id="nutriDays" class="nutri-days"></div>
-
-                <!-- 🆕 Wrapper avec loader + contenu -->
-                <div class="nutri-content-wrap" style="position:relative; min-height:140px;">
-                  <!-- Loader Lottie nutrition -->
-                  <div id="nutriLoader" class="chart-lottie-loader">
-                    <div id="nutriAnim" class="chart-lottie-player"></div>
-                  </div>
-
-                  <!-- Contenu des repas -->
-                  <div id="nutriContent"></div>
-                </div>
-              </div>
-            </section>
-
+           
 
 
 
@@ -348,7 +355,7 @@
       <pre id="pingResult"></pre>
     </section>
 
-    <div id="appVersion" class="app-version">Version : 0.0.7 (26/11/2025)</div>
+    <div id="appVersion" class="app-version">Version : 0.0.8 (27/11/2025)</div>
 
             <!-- Onglet TO DO LIST -->
             <section id="tab2-todo" class="tab">
@@ -382,7 +389,9 @@
             <p id="debugClient" style="font-size:12px; color:#888; margin-top:8px;"></p>
 
   </main>
-
+            
+            <audio id="clickSound" src="./sounds/click.mp3" preload="auto"></audio>
+            <audio id="clickTabSound" src="./sounds/click-tab.mp3" preload="auto"></audio>
             
   <!-- Barre de navigation -->
   <nav class="bottom-nav">
@@ -391,15 +400,6 @@
     <button type="button" class="tab-btn" data-tab="tab3" onclick="switchTab('tab3', this)">Paramètres</button>
   </nav>
 
-
-  <!-- Service Worker -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js')
-        .then(reg => console.log('✅ Service Worker enregistré', reg))
-        .catch(err => console.warn('❌ Service Worker erreur', err));
-    }
-  </script>
 
   <script>
   if ('serviceWorker' in navigator) {
@@ -416,14 +416,6 @@
     });
   }
   </script>
-
-  <!--
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js');
-    }
-  </script>
-  -->
 
             <!-- Lottie Web (un seul, comme sur Scratch Mouse) -->
             <script src="https://unpkg.com/lottie-web@latest/build/player/lottie.min.js"></script>
