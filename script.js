@@ -89,18 +89,11 @@ const TRAINING_SHEETS = {
 
     // 3) ⚠️ Cas PWA : start_url = ?source=pwa → jamais d'id dans l'URL
     //    Si on est dans ce mode et qu'on ne connaît pas encore le client,
-    //    on lui demande une seule fois son code.
+    //    on affichera l'écran de connexion (loginBox) plus tard.
     if (!id && location.search.includes('source=pwa')) {
-      const alreadyAsked = localStorage.getItem('client_id_prompted') === '1';
-      if (!alreadyAsked) {
-        const manual = prompt("Entre ton code client (ex : alban, marvin, etc.) :","");
-        localStorage.setItem('client_id_prompted', '1');
-        if (manual && manual.trim()) {
-          id = manual.trim();
-          localStorage.setItem('client_id', id);
-        }
-      }
+      window.__NEED_LOGIN__ = true;
     }
+
 
     // 4) Finalisation
     if (id) {
@@ -212,7 +205,7 @@ async function loadProfileData() {
     // 🔹 Puis on va chercher le total de points santé côté Apps Script
     await loadProfileHealthPoints(scoreEl, ptsTextEl, barEl);
 
-  
+
   } catch (err) {
     console.error('loadProfileData error:', err);
     const badge = document.getElementById('profileNameBadge');
@@ -865,10 +858,35 @@ function checkBilanStatusAtStartup() {
 // ---------- init ----------
 logDiag('JS chargé', true);
 
+function submitClientLogin() {
+  const input = document.getElementById('loginInput');
+  const val = (input?.value || '').trim().toLowerCase();
+
+  if (!val) {
+    alert("Merci d’entrer ton code client 😊");
+    return;
+  }
+
+  // On enregistre
+  window.__CLIENT_ID__ = val;
+  localStorage.setItem('client_id', val);
+
+  // On masque le popup
+  document.getElementById('loginBox')?.classList.add('hidden');
+
+  // Et on continue l'app normalement
+  // (Pas besoin de reload)
+}
+
+
 // 🧠 Initialisation "logique" (UI, bouton bilan...)
 document.addEventListener('DOMContentLoaded', () => {
   refreshDateBadge();
   checkBilanStatusAtStartup();
+
+  if (window.__NEED_LOGIN__) {
+    document.getElementById('loginBox')?.classList.remove('hidden');
+  }
 });
 
 // 🌀 Initialisation des loaders Lottie (quand TOUT est chargé, y compris lottie.min.js)
@@ -1816,4 +1834,3 @@ document.addEventListener("click", (e) => {
   // Tous les autres clics → son normal
   playSfx('click');
 });
-
