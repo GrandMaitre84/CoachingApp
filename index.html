@@ -34,30 +34,26 @@
 
 <body>
 
-  <div id="loginBox" class="hidden" style="
-    position: fixed;
-    top: 20%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 260px;
-    background: white;
-    padding: 18px;
-    border-radius: 14px;
-    box-shadow: 0 4px 18px rgba(0,0,0,0.15);
-    z-index: 9999;
-    text-align: center;
-  ">
-    <h3 style="margin: 0 0 10px;">Connexion</h3>
-    <p style="font-size: 14px; margin-bottom: 12px;">
-      Entre ton code client :
-    </p>
-    <input id="loginInput" type="text"
-           style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 12px;"
-           placeholder="ex : test, zrzka...">
+  <!-- 🔐 ÉCRAN DE CONNEXION FULL PAGE -->
+  <div id="loginPanel" class="hidden">
+    <div class="login-card">
+      <h2>Connexion</h2>
+      <p class="note">Entre ton code client pour accéder à ton espace :</p>
 
-    <button onclick="submitClientLogin()" class="primary"
-            style="width: 100%;">Continuer</button>
+      <input
+        id="loginInput"
+        type="text"
+        placeholder="..."
+        autocomplete="off"
+      />
+
+      <button class="primary" onclick="submitClientLogin()">
+        Continuer
+      </button>
+    </div>
   </div>
+
+
 
 
   <main>
@@ -380,7 +376,7 @@
       <pre id="pingResult"></pre>
     </section>
 
-    <div id="appVersion" class="app-version">Version : 0.0.8 (27/11/2025)</div>
+    <div id="appVersion" class="app-version">Version : 0.0.9 (27/11/2025)</div>
 
             <!-- Onglet TO DO LIST -->
             <section id="tab2-todo" class="tab">
