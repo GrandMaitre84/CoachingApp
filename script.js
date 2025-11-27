@@ -491,7 +491,7 @@ function addTodo() {
 }
 
 function openTrainingPage() {
-  switchTab('tab2-training', document.querySelector('.tab-btn[data-tab="tab1"]'));
+  switchTab('tab2-training');
 }
 
 function backFromTraining() {
