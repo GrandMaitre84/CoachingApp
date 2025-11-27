@@ -64,7 +64,7 @@ var CLIENT_SHEETS = {
 
 // 🔗 Mapping ID client -> URL du Google Sheet (programme training)
 const TRAINING_SHEETS = {
-  test:  "https://docs.google.com/spreadsheets/d/1ILwT2oiQkTL17HgCDvK_LyCqQ720TO5RQzhpKaanzBk/edit#gid=190306182",
+  test:  "https://docs.google.com/spreadsheets/d/1ILwT2oiQkTL17HgCDvK_LyCqQ720TO5RQzhpKaanzBk/edit?gid=1782220140#gid=1782220140",
   zrzka: "https://docs.google.com/spreadsheets/d/1UlRO3GuZB8MzA1J9bC06lZk4ifWgeMpHazbnk7JGhuY/edit?gid=1782220140#gid=1782220140"
 };
 
