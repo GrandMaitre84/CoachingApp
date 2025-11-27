@@ -62,16 +62,14 @@ var CLIENT_SHEETS = {
   // 'christophe': 'CHRISTOPHE',
 };
 
-// 3) Lecture de l'id dans l'URL (ou depuis localStorage) et choix de la feuille
-// 1) Fallback si pas d'id dans l'URL
-var SHEET_TAB = 'Journal';
-
-// 2) (Optionnel) Mapping id -> nom d'onglet (si tu veux décorréler)
-var CLIENT_SHEETS = {
-  // 'alban': 'ALBAN',
-  // 'marvin': 'MARVIN',
-  // 'christophe': 'CHRISTOPHE',
+// 🔗 Mapping ID client -> URL du Google Sheet (programme training)
+const TRAINING_SHEETS = {
+  test:  "https://docs.google.com/spreadsheets/d/1ILwT2oiQkTL17HgCDvK_LyCqQ720TO5RQzhpKaanzBk/edit#gid=190306182",
+  zrzka: "https://docs.google.com/spreadsheets/d/1UlRO3GuZB8MzA1J9bC06lZk4ifWgeMpHazbnk7JGhuY/edit#gid=854767761"
 };
+
+
+
 
 // 3) Lecture de l'id dans l'URL OU depuis localStorage (+ fallback PWA)
 (function initClient() {
@@ -491,6 +489,33 @@ function addTodo() {
 
   wrap.appendChild(div);
 }
+
+function openTrainingPage() {
+  switchTab('tab2-training', document.querySelector('.tab-btn[data-tab="tab1"]'));
+}
+
+function backFromTraining() {
+  switchTab('tab1', document.querySelector('.tab-btn[data-tab="tab1"]'));
+}
+
+function openTrainingSheet() {
+  const id = (window.__CLIENT_ID__ || '').trim().toLowerCase();
+
+  // On récupère l'URL correspondant à cet ID
+  const url = TRAINING_SHEETS[id];
+
+  if (!url) {
+    alert("Ton programme training n'est pas encore relié à ton compte. Contacte ton coach 😊");
+    return;
+  }
+
+  // Ouvre le Google Sheet dans le navigateur / app Google Sheets
+  window.open(url, '_blank');
+}
+
+// On l’expose pour le HTML
+window.openTrainingSheet = openTrainingSheet;
+
 
 // ───────── Lottie – TODO list (style Scratch Mouse) ─────────
 let todoAnim = null;
@@ -1666,8 +1691,6 @@ async function loadNutrition(sheetName){
     if (targetId === 'tab2-weight') loadWeightChart();
     if (targetId === 'tab2-sleep')  loadSleepChart();
     if (targetId === 'tab2-steps')  loadStepsChart();
-    if (targetId === 'tab2-nutrition') openNutritionPage(); // ⬅️ NOUVEAU
-    // Sur 'tab2' (menu), on ne charge rien.
   };
 })();
 
@@ -1690,6 +1713,44 @@ function goToTab(n) {
 
 window.goToTab = goToTab;
 
+// 🔹 Ouvrir la page Nutrition depuis l'accueil (tab1)
+function goToNutrition() {
+  // On cache l'écran d'accueil
+  document.getElementById('tab1')?.classList.remove('active');
+
+  // On affiche la page Nutrition (ancienne tab2-nutrition)
+  document.getElementById('tab2-nutrition')?.classList.add('active');
+
+  // On laisse la nav du bas sur "Accueil" (on ne touche PAS aux .tab-btn)
+  // On charge les données nutrition
+  openNutritionPage();
+}
+
+function backFromNutrition() {
+  // 1) Nav du bas : on repasse sur "Accueil"
+  const activeBtn = document.querySelector('.tab-btn.active');
+  if (activeBtn) activeBtn.classList.remove('active');
+
+  const homeBtn = document.querySelector('.tab-btn[data-tab="tab1"]');
+  if (homeBtn) homeBtn.classList.add('active');
+
+  // 2) Onglets principaux : on masque tout, on affiche tab1
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab1')?.classList.add('active');
+
+  // 3) On remet l'écran d'accueil dans son état "normal"
+  document.getElementById('bilanPanel')?.classList.remove('hidden');
+  document.getElementById('startPanel')?.classList.add('hidden');
+  document.getElementById('qaPanel')?.classList.add('hidden');
+  document.getElementById('donePanel')?.classList.add('hidden');
+  document.getElementById('profilePanel')?.classList.add('hidden');
+}
+
+
+// On expose les fonctions pour le HTML
+window.goToNutrition = goToNutrition;
+window.backFromNutrition = backFromNutrition;
+
 
 // ===== MODE TEST : Reset complet si on appuie sur la touche A =====
 document.addEventListener('keydown', (e) => {
@@ -1704,6 +1765,19 @@ document.addEventListener('keydown', (e) => {
     }
   }
 });
+
+function openNutritionFromHome() {
+  // 1) On active l’onglet "Suivi" dans la nav du bas
+  const tab2Btn = document.querySelector('.tab-btn[data-tab="tab2"]');
+  if (tab2Btn) {
+    switchTab('tab2', tab2Btn);
+  }
+
+  // 2) On affiche directement la sous-page Nutrition
+  // (pas de bouton dans la nav pour ça, donc pas de second argument)
+  switchTab('tab2-nutrition');
+}
+
 
 setInterval(() => {
   const version = document.getElementById("appVersion");
