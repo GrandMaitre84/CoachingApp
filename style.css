@@ -915,6 +915,13 @@ button.primary:disabled {
   border-color: #ccf5e9;
 }
 
+/* ⚡ ÉNERGIE — coloration douce */
+.energy-avg-card,
+#energyAvgBlock {
+  background: #f0fffa;
+  border-color: #ccf5e9;
+}
+
 
 /* Ajoute un espace entre deux cartes dans SOMMEIL */
 #tab2-sleep .card + .card {
@@ -1215,4 +1222,8 @@ button.primary:disabled {
   border: 1px solid #ccc;
   text-align: center;    /* centre le texte */
   display: block;        /* permet le centrage horizontal */
+}
+
+#debugClient {
+  display: none !important;
 }
