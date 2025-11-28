@@ -1928,7 +1928,7 @@ window.backFromNutrition = backFromNutrition;
 
 // ===== MODE TEST : Reset complet si on appuie sur la touche A =====
 document.addEventListener('keydown', (e) => {
-  if (e.key.toLowerCase() === 'a') {
+  if (e.key.toLowerCase() === 'x') {
 
     // 🔄 Reset : bilan du jour
     localStorage.removeItem('bilan_done');
