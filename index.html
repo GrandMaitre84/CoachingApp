@@ -240,23 +240,28 @@
 
 
     <!-- Onglet 2 : menu -->
-    <section id="tab2" class="tab">
-      <h2 id="tab2-title" class="section-title">Mon suivi</h2>
-      <div id="tab2-menu" class="dashboard-grid">
-        <button class="tile"
-          onclick="switchTab('tab2-sleep', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">
-          😴 SOMMEIL
-        </button>
-        <button class="tile"
-          onclick="switchTab('tab2-weight', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">
-          ⚖️ POIDS
-        </button>
-        <button class="tile"
-          onclick="switchTab('tab2-steps', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">
-          👟PAS
-        </button>
-      </div>
-    </section>
+            <section id="tab2" class="tab">
+              <h2 id="tab2-title" class="section-title">Mon suivi</h2>
+              <div id="tab2-menu" class="dashboard-grid">
+                <button class="tile"
+                  onclick="switchTab('tab2-sleep', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">
+                  😴 SOMMEIL
+                </button>
+                <button class="tile"
+                  onclick="switchTab('tab2-weight', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">
+                  ⚖️ POIDS
+                </button>
+                <button class="tile"
+                  onclick="switchTab('tab2-steps', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">
+                  👟PAS
+                </button>
+                <button class="tile"
+                  onclick="switchTab('tab2-energy', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">
+                  ⚡ ÉNERGIE
+                </button>
+              </div>
+            </section>
+
 
     
             <!-- Sous-page : Graphique Sommeil -->
@@ -361,6 +366,38 @@
               <div id="stepsAvgCard" class="summary-card summary-steps">
                 <div class="summary-title">Moyenne sur les 7 derniers jours</div>
                 <div id="stepsAvgValue" class="summary-value">—</div>
+              </div>
+            </section>
+
+            <!-- Sous-page : Graphique Énergie -->
+            <section id="tab2-energy" class="tab">
+              <button class="back"
+                onclick="switchTab('tab2', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">
+                ← Retour
+              </button>
+
+              <div class="card">
+                <div class="card-header">
+                  <h2>Énergie</h2>
+                  <span id="lastEnergyBadge" class="chip">—</span>
+                </div>
+
+                <!-- Wrapper avec loader + canvas -->
+                <div class="chart-wrap" style="height:260px; position:relative;">
+                  <!-- Loader Lottie Énergie -->
+                  <div id="energyLoader" class="chart-lottie-loader">
+                    <div id="energyAnim" class="chart-lottie-player"></div>
+                  </div>
+
+                  <!-- Canvas du graphique -->
+                  <canvas id="energyChart"></canvas>
+                </div>
+              </div>
+
+              <!-- Carte moyenne 7 jours -->
+              <div id="energyAvgCard" class="summary-card energy-avg-card">
+                <div class="summary-title">Moyenne sur les 7 derniers jours</div>
+                <div id="energyAvgValue" class="summary-value">—</div>
               </div>
             </section>
 
