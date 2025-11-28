@@ -334,8 +334,7 @@ var QUESTIONS = [
   { col: 'L', label: "Nutrition non trackée (texte libre)", type: "text", validate: v => v !== '' },
   { col: 'M', label: "Digestion (note sur 5)", type: "select", options:["1","2","3","4","5"], validate: v => ["1","2","3","4","5"].includes(v) },
   { col: 'N', label: "Séance", type: "select", options:["BOF","MOYEN","BIEN","SUPER","REPOS"], validate: v => ["BOF","MOYEN","BIEN","SUPER","REPOS"].includes(v) },
-  { col: 'O', label: "Nombre de pas (steps)", type: "number", step:"1", min:"0", validate: v => String(v) !== '' },
-  { col: 'P', label: "Cardio (durée min)", type: "number", step:"1", min:"0", validate: v => String(v) !== '' }
+  { col: 'O', label: "Nombre de pas (steps)", type: "number", step:"1", min:"0", validate: v => String(v) !== '' }
 ];
 
 var state = { date:null, idx:0, currentInputEl:null, answers:{} };
@@ -922,6 +921,7 @@ window.addEventListener('load', () => {
   initSleepLoader();
   initWeightLoader();
   initStepsLoader();
+  initEnergyLoader();
   initNutriLoader();
 
   // ✅ Init de l’animation TODO (comme Scratch Mouse pour le badge)
@@ -1248,11 +1248,29 @@ function renderSleepChart(points){
   });
 }
 
-
-
-
 // ───────── Graphique pas (barres) ─────────
 let stepsChart = null;
+
+// ───────── Graphique énergie (ligne) ─────────
+let energyChart = null;
+let energyLoaderAnim = null; // animation Lottie énergie
+
+function initEnergyLoader() {
+  const container = document.getElementById('energyAnim');
+  if (!container || typeof lottie === 'undefined') return;
+
+  energyLoaderAnim = lottie.loadAnimation({
+    container: container,
+    renderer: 'svg',
+    loop: true,
+    autoplay: false,
+    path: './animations/loading.json'
+  });
+}
+
+
+
+
 
 // ───────── Loader Lottie – Pas ─────────
 let stepsLoaderAnim = null;
@@ -1373,6 +1391,121 @@ function renderStepsChart(points){
     }
   });
 
+}
+
+async function loadEnergyChart() {
+  const loader = document.getElementById('energyLoader');
+
+  // 👀 Afficher le loader seulement au premier chargement
+  if (!energyChart && loader) {
+    loader.classList.add('visible');
+  }
+  if (!energyChart && energyLoaderAnim) {
+    energyLoaderAnim.play();
+  }
+
+  try {
+    const clientId = (window.__CLIENT_ID__ || '').trim();
+    const url = GAS_URL + '?action=energy'
+      + (SHEET_TAB ? ('&sheet=' + encodeURIComponent(SHEET_TAB)) : '')
+      + (clientId ? ('&id=' + encodeURIComponent(clientId)) : '');
+    const res = await fetch(url);
+    let data = [];
+    if (res.ok) {
+      const json = await res.json();
+      if (json && json.ok && Array.isArray(json.data)) data = json.data;
+    }
+    renderEnergyChart(data);
+  } catch (err) {
+    console.error('loadEnergyChart error:', err);
+    renderEnergyChart([]);
+  }
+
+  // 🧹 Cacher le loader après
+  if (loader) {
+    loader.classList.remove('visible');
+  }
+  if (energyLoaderAnim) {
+    energyLoaderAnim.stop();
+  }
+}
+
+function renderEnergyChart(points) {
+  const badge    = document.getElementById('lastEnergyBadge');
+  const canvas   = document.getElementById('energyChart');
+  const avgValue = document.getElementById('energyAvgValue');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+
+  // Pas de données → reset propre
+  if (!points || !points.length) {
+    if (badge)    badge.textContent = '—';
+    if (avgValue) avgValue.textContent = 'Pas assez de données';
+
+    if (energyChart) {
+      energyChart.destroy();
+      energyChart = null;
+    }
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    return;
+  }
+
+  const labels = points.map(p => p.date);
+  const values = points.map(p => Number(p.energy));
+
+  // Badge dernier point
+  if (badge) {
+    const last = values[values.length - 1];
+    badge.textContent = `${last.toLocaleString('fr-FR')} / 5`;
+  }
+
+  // Moyenne sur les 7 derniers points
+  if (avgValue) {
+    const last7 = values.slice(-7).filter(v => Number.isFinite(v));
+    if (last7.length) {
+      const sum = last7.reduce((acc, v) => acc + v, 0);
+      const avg = sum / last7.length;
+      avgValue.textContent = `${avg.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} / 5`;
+    } else {
+      avgValue.textContent = '—';
+    }
+  }
+
+  if (energyChart) energyChart.destroy();
+
+  energyChart = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        borderWidth: 2,
+        tension: 0.35,
+        pointRadius: 3,
+        pointHoverRadius: 4,
+        borderColor: '#f59e0b',        // jaune énergie
+        pointBackgroundColor: '#facc15'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false } },
+        y: {
+          min: 1,
+          max: 5,
+          ticks: {
+            stepSize: 1,
+            callback: v => v.toLocaleString('fr-FR')
+          },
+          grid: { color: 'rgba(0,0,0,.08)' }
+        }
+      }
+    }
+  });
 }
 
 
@@ -1731,6 +1864,7 @@ async function loadNutrition(sheetName){
     if (targetId === 'tab2-weight') loadWeightChart();
     if (targetId === 'tab2-sleep')  loadSleepChart();
     if (targetId === 'tab2-steps')  loadStepsChart();
+    if (targetId === 'tab2-energy') loadEnergyChart(); 
   };
 })();
 
