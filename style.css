@@ -1227,3 +1227,107 @@ button.primary:disabled {
 #debugClient {
   display: none !important;
 }
+
+/* ===========================
+   📊 Carte "Résumé d’hier"
+   =========================== */
+
+.yesterday-card {
+  margin-top: 10px;
+  margin-bottom: 16px;  /* espace sous la carte */
+  padding: 16px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #6EE7FF, #7DFCC2);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.10);
+  animation: summaryFade 0.35s ease-out;
+  color: #0f172a;
+  border: none;          /* override .card si besoin */
+}
+
+/* Header : titre + icône + date */
+.yesterday-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.yesterday-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.yesterday-icon {
+  font-size: 20px;
+}
+
+.yesterday-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.yesterday-subtitle {
+  margin: 0;
+  opacity: 0.75;
+  font-size: 11px;
+}
+
+/* Chip date (utilise déjà la classe .chip-soft dans le HTML) */
+.chip-soft {
+  padding: 4px 10px;
+  font-size: 11px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+}
+
+/* Grille des 4 indicateurs (somnol, poids, pas, énergie) */
+.yesterday-grid {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.yesterday-item {
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+/* Ligne label (emoji + texte) */
+.yesterday-item-label {
+  font-size: 11px;
+  opacity: 0.8;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.yesterday-emoji {
+  font-size: 16px;
+}
+
+/* Valeur principale (grosse) */
+.yesterday-value {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* Animation d’apparition */
+@keyframes summaryFade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
