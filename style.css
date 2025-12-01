@@ -10,16 +10,16 @@
   --err:#d64545;         /* rouge erreur */
 }
 
-/* Base mobile */
-*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-html,body{ height:100%; }
 body{
   margin:0;
   font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-  background:var(--bg);
-  color:var(--text);
   padding-bottom:70px; /* place pour la nav bas */
+
+  /* 🎨 Fond plus joli pour supporter le glassmorphism */
+  background: linear-gradient(135deg, #eff6ff, #f2fbff);
+  color:var(--text);
 }
+
 
 /* Titre */
 header{
@@ -153,13 +153,6 @@ pre{
   color:var(--primary);
 }
 
-/* Date */
-.date-row{ text-align:center; margin:10px 0 20px 0; }
-.date-pill{
-  display:inline-block; background:#f0f4ff; color:#2a2a2a;
-  font-size:14px; font-weight:600; padding:6px 14px; border-radius:20px;
-  box-shadow:0 2px 4px rgba(0,0,0,0.08);
-}
 
 /* Carte du graphique (Historique) */
 .card{
@@ -186,14 +179,7 @@ pre{
 .chart-wrap{ width:100%; height:260px; }
 .chart-wrap canvas{ width:100% !important; height:100% !important; display:block; }
 
-/* Sous-onglets (onglet 2) */
-#tab2-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-.tile{
-  padding:16px; border-radius:14px; border:1px solid var(--line);
-  background:var(--surface); font-weight:800; font-size:16px; cursor:pointer;
-  box-shadow:0 6px 16px rgba(0,0,0,.06);
-}
 
 .back{
   margin-bottom:12px;
@@ -209,30 +195,38 @@ pre{
 }
 
 
-/* === Titre onglet 2 "Mon suivi" — bandeau full width arrondi === */
+/* === Titre "Mon suivi" : style final === */
 #tab2-title {
-  width: 100%;
-  text-align: center;
-
+  background: linear-gradient(180deg, #6EE7FF, #7DFCC2);
+  color: #0f1f3a; /* bleu profond lisible, poli */
   font-size: 20px;
   font-weight: 800;
+  text-align: center;
 
-  margin: 0 0 16px 0;   /* ✔ ajoute un espace en dessous */
   padding: 14px 0;
+  margin: 0 0 16px 0;
+  width: 100%;
 
-  background: #e8f0ff;
-  color: #1e3a8a;
+  border-radius: 20px;
 
-  border-bottom: 1px solid #d0ddff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+  /* 💎 Relief net et premium */
+  box-shadow:
+     0 4px 10px rgba(0,0,0,0.12),   /* ombre large */
+     0 1px 3px rgba(0,0,0,0.18),    /* ombre fine marquée */
+     inset 0 0 6px rgba(255,255,255,0.4); /* lumière interne */
+
+  border: 1px solid rgba(255,255,255,0.55);
 
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 8px;
-
-  border-radius: 12px;   /* ✔ arrondit les angles */
 }
+
+
+
+
+
 
 /* Nutrition — cartes repas */
 .meal-card{
@@ -416,19 +410,7 @@ pre{
   width:100%;
 }
 
-/* Cases identiques (largeur & hauteur) */
-#tab2-menu.dashboard-grid .tile{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  width:100%;
-  min-height:100px;      /* force la même hauteur visuelle */
-  margin:0;              /* évite des écarts inattendus */
-  border-radius:12px;
-  font-weight:700;
-}
+
 
 /* Emoji + texte bien centrés */
 #tab2-menu.dashboard-grid .tile > * {
@@ -1234,17 +1216,59 @@ button.primary:disabled {
 
 .yesterday-card {
   margin-top: 10px;
-  margin-bottom: 16px;  /* espace sous la carte */
+  margin-bottom: 22px; /* un peu plus d’air */
   padding: 16px;
   border-radius: 18px;
   background: linear-gradient(135deg, #6EE7FF, #7DFCC2);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.10);
-  animation: summaryFade 0.35s ease-out;
   color: #0f172a;
-  border: none;          /* override .card si besoin */
+  border: none;
+
+  /* 🌥 Ombre douce, classy, non envahissante */
+  box-shadow:
+    0 8px 18px rgba(15, 23, 42, 0.22),
+    0 0 0 1px rgba(255,255,255,0.25) inset;
 }
 
-/* Header : titre + icône + date */
+.yesterday-today {
+  margin-top: 4px;
+  font-size: 11px;
+  color: rgba(15, 23, 42, 0.75);
+}
+
+.yesterday-today-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  margin-left: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  font-weight: 600;
+  font-size: 11px;
+}
+
+
+
+
+
+#bilanPanel .primary {
+  box-shadow:
+    0 8px 18px rgba(15, 23, 42, 0.22),   /* ombre douce et propre */
+    0 0 0 1px rgba(255,255,255,0.25) inset; /* léger bord lumineux */
+
+  transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+  border-radius: 14px; /* arrondi cohérent */
+}
+
+#bilanPanel .primary:active {
+  transform: translateY(1px) scale(0.97);
+  box-shadow:
+    0 6px 14px rgba(15, 23, 42, 0.18),
+    0 0 0 1px rgba(255,255,255,0.25) inset;
+}
+
+
 .yesterday-header {
   display: flex;
   align-items: center;
@@ -1258,10 +1282,6 @@ button.primary:disabled {
   gap: 8px;
 }
 
-.yesterday-icon {
-  font-size: 20px;
-}
-
 .yesterday-title {
   font-size: 16px;
   font-weight: 700;
@@ -1273,6 +1293,8 @@ button.primary:disabled {
   opacity: 0.75;
   font-size: 11px;
 }
+
+
 
 /* Chip date (utilise déjà la classe .chip-soft dans le HTML) */
 .chip-soft {
@@ -1330,4 +1352,200 @@ button.primary:disabled {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* ===== Date du jour : style cohérent avec le dashboard ===== */
+
+/* ===== Date du jour ===== */
+.date-row {
+  width: 100%;                  /* prend toute la largeur du conteneur */
+  display: flex;                /* on utilise flex pour centrer */
+  justify-content: center;      /* centre horizontalement */
+  margin: 10px 0 18px 0;        /* espace au-dessus / en dessous */
+}
+
+.date-pill {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  width: 100%;
+  padding: 12px 0;
+
+  background: linear-gradient(135deg, #6EE7FFcc, #7DFCC2cc);
+  border-radius: 20px;
+
+  color: #0f172a;
+  font-weight: 800;
+  font-size: 15px;
+  text-shadow: 0 1px 1px rgba(255,255,255,0.6);
+
+  box-shadow:
+    0 8px 20px rgba(0,0,0,0.12),
+    0 0 0 1px rgba(255,255,255,0.4) inset;
+
+  animation: homeFade 0.35s ease-out;
+}
+
+
+
+/* === Animation des boutons d'accueil === */
+@keyframes homeFade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.home-anim {
+  animation: homeFade 0.35s ease-out;
+}
+
+
+/* === Onglet 2 : "Mon suivi" – grille + tuiles === */
+
+#tab2-menu {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  width: 100%;
+}
+
+/* Style unique des tuiles SOMMEIL / POIDS / PAS / ÉNERGIE / PROFIL / TODO */
+#tab2-menu .tile,
+#tab2-menu button.tile {
+  all: unset;
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  width: 100%;
+  min-height: 100px;
+  padding: 18px;
+
+  background: linear-gradient(135deg, #4da6ff, #52e0c8);
+  border-radius: 18px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+
+  font-weight: 700;
+  font-size: 15px;
+  text-align: center;
+  color: #ffffff;
+
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+}
+
+/* Effet clic */
+#tab2-menu .tile:active,
+#tab2-menu button.tile:active {
+  transform: translateY(1px) scale(0.97);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.3);
+  opacity: 0.9;
+}
+
+/* L’emoji + le texte ne prennent pas le clic, c’est la tuile entière */
+#tab2-menu .tile > *,
+#tab2-menu button.tile > * {
+  pointer-events: none;
+}
+
+/* === TUILES "MON SUIVI" AVEC RELIEF === */
+#tab2-menu button.tile {
+  all: unset;
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  width: 100%;
+  min-height: 100px;
+  padding: 18px;
+
+  /* même gradient que tes blocs actuels */
+  background: linear-gradient(135deg, #4da6ff, #52e0c8);
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+
+  /* 💡 vrai effet de profondeur */
+  box-shadow:
+    0 18px 35px rgba(15, 23, 42, 0.30),  /* ombre principale */
+    0 0 0 1px rgba(15, 23, 42, 0.05);    /* léger contour */
+
+  font-weight: 700;
+  font-size: 15px;
+  text-align: center;
+  color: #ffffff;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.25);
+
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
+}
+
+#tab2-menu button.tile:active {
+  transform: translateY(1px) scale(0.97);
+  box-shadow:
+    0 10px 20px rgba(15, 23, 42, 0.35),
+    0 0 0 1px rgba(15, 23, 42, 0.08);
+  opacity: 0.96;
+}
+
+/* L’emoji + texte ne prennent pas le clic, c’est la tuile entière */
+#tab2-menu button.tile > * {
+  pointer-events: none;
+}
+
+#tab2-menu button.tile {
+  animation: homeFade 0.35s ease-out;
+}
+
+#tab2-title {
+  animation: homeFade 0.35s ease-out;
+}
+
+.yesterday-dates-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  padding: 4px 6px;
+}
+
+.yesterday-today-pill {
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(255,255,255,0.35);
+  padding: 4px 10px;
+  border-radius: 999px;
+  backdrop-filter: blur(4px);
+}
+
+.yesterday-today-row {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 6px;
+  padding-left: 4px;
+}
+
+.yesterday-today-pill {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  background: rgba(255,255,255,0.45);
+  border: 1px solid rgba(255,255,255,0.55);
+  color: #0f172a;
+  border-radius: 8px;
+  backdrop-filter: blur(6px);
 }
