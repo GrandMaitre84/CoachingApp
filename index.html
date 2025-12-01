@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  
+
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 
 
   <!-- CSS externe + cache-buster -->
-  <link rel="stylesheet" href="./style.css?v=7" />
+  <link rel="stylesheet" href="./style.css?v=12" />
 
   <!-- CSS critique inline (sécurité : onglets) -->
   <style>
@@ -63,13 +63,65 @@
         <span id="todayDisplay" class="date-pill">Date : --/--/----</span>
       </div>
 
+      <!-- 🟢 Résumé d’hier -->
+      <div id="yesterdaySummary" class="yesterday-card">
+        <div class="yesterday-header">
+          <div class="yesterday-title-wrap">
+            <span class="yesterday-icon">📊</span>
+            <div>
+              <div class="yesterday-title">Résumé d’hier</div>
+              <div class="yesterday-subtitle">Un coup d’œil sur ta dernière journée</div>
+            </div>
+          </div>
+          <span id="yesterdayDate" class="chip chip-soft">--/--/----</span>
+        </div>
+
+        <div class="yesterday-grid">
+          <!-- Sommeil -->
+          <div class="yesterday-item">
+            <div class="yesterday-item-label">
+              <span class="yesterday-emoji">😴</span>
+              <span>Sommeil</span>
+            </div>
+            <div id="yesterdaySleep" class="yesterday-value">—</div>
+          </div>
+
+          <!-- Poids -->
+          <div class="yesterday-item">
+            <div class="yesterday-item-label">
+              <span class="yesterday-emoji">⚖️</span>
+              <span>Poids</span>
+            </div>
+            <div id="yesterdayWeight" class="yesterday-value">—</div>
+          </div>
+
+          <!-- Pas -->
+          <div class="yesterday-item">
+            <div class="yesterday-item-label">
+              <span class="yesterday-emoji">👟</span>
+              <span>Pas</span>
+            </div>
+            <div id="yesterdaySteps" class="yesterday-value">—</div>
+          </div>
+
+          <!-- Énergie -->
+          <div class="yesterday-item">
+            <div class="yesterday-item-label">
+              <span class="yesterday-emoji">⚡</span>
+              <span>Énergie</span>
+            </div>
+            <div id="yesterdayEnergy" class="yesterday-value">—</div>
+          </div>
+        </div>
+      </div>
+
+
+      
       <!-- Nouveau bouton principal -->
       <div id="bilanPanel">
         <button id="bilanBtn" class="primary" onclick="openDailyCheckin()">BILAN DU JOUR</button>
-        <button id="profileBtn" class="primary" onclick="openProfile()">PROFILE</button>
         <button class="primary" onclick="openTrainingPage()" style="margin-top: 12px;">TRAINING</button>
         <button type="button" class="primary" onclick="goToNutrition()">NUTRITION</button>
-        <button id="todoBtn" class="primary" onclick="openTodo()">TO DO LIST</button>
 
       </div>
 
@@ -124,7 +176,7 @@
         </button>
       </div>
 
-      
+
 
       <!-- Panneau PROFIL (caché au départ) -->
       <div id="profilePanel" class="hidden">
@@ -259,11 +311,22 @@
                   onclick="switchTab('tab2-energy', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">
                   ⚡ ÉNERGIE
                 </button>
+
+                <!-- 🆕 Nouveau : accès Profil depuis l'onglet Suivi -->
+                <button class="tile" onclick="openProfileFromSuivi()">
+                  👤 PROFIL
+                </button>
+
+                <!-- 🆕 Nouveau : accès To Do List depuis l'onglet Suivi -->
+                <button class="tile" onclick="openTodo()">
+                  ✅ TO DO LIST
+                </button>
               </div>
             </section>
 
 
-    
+
+
             <!-- Sous-page : Graphique Sommeil -->
             <section id="tab2-sleep" class="tab">
               <button class="back"
@@ -327,7 +390,7 @@
                   <canvas id="weightChart"></canvas>
                 </div>
               </div>
-       
+
             <!-- 🆕 Carte Moyenne 7 jours -->
             <div id="weightAvgCard" class="summary-card weight-avg-card">
               <div class="summary-title">Moyenne sur les 7 derniers jours</div>
@@ -402,7 +465,7 @@
             </section>
 
 
-           
+
 
 
 
@@ -413,16 +476,17 @@
       <pre id="pingResult"></pre>
     </section>
 
-    <div id="appVersion" class="app-version">Version : 0.1.0 (28/11/2025)</div>
+    <div id="appVersion" class="app-version">Version : 0.1.1 (01/12/2025)</div>
 
             <!-- Onglet TO DO LIST -->
             <section id="tab2-todo" class="tab">
 
               <!-- Bouton Retour -->
               <button class="back"
-                onclick="switchTab('tab1', document.querySelector('.tab-btn[data-tab=&quot;tab1&quot;]'))">
+                onclick="returnFromTodo()">
                 ← Retour
               </button>
+
 
               <!-- Bouton Ajouter une tâche -->
               <button class="primary" onclick="addTodo()" style="margin-bottom: 14px;">
@@ -447,10 +511,10 @@
             <p id="debugClient" style="font-size:12px; color:#888; margin-top:8px;"></p>
 
   </main>
-            
+
             <audio id="clickSound" src="./sounds/click.mp3" preload="auto"></audio>
             <audio id="clickTabSound" src="./sounds/click-tab.mp3" preload="auto"></audio>
-            
+
   <!-- Barre de navigation -->
   <nav class="bottom-nav">
     <button type="button" class="tab-btn active" data-tab="tab1" onclick="switchTab('tab1', this)">Accueil</button>
@@ -462,7 +526,7 @@
   <script>
   if ('serviceWorker' in navigator) {
     // ⚠️ Mettez à jour ce numéro à chaque release
-    const SW_VERSION = 'v12';
+    const SW_VERSION = 'v15';
     navigator.serviceWorker.register(`./sw.js?${SW_VERSION}`).then(reg => {
       setInterval(() => reg.update(), 60 * 60 * 1000);
       let refreshing = false;
@@ -478,8 +542,8 @@
             <!-- Lottie Web (un seul, comme sur Scratch Mouse) -->
             <script src="https://unpkg.com/lottie-web@latest/build/player/lottie.min.js"></script>
             <!-- Ton script principal -->
-            <script src="./script.js?v=11"></script>
+            <script src="./script.js?v=12"></script>
 
-            
+
 </body>
 </html>
