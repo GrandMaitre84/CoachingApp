@@ -347,6 +347,15 @@ function todayFR(){
        + String(d.getMonth()+1).padStart(2,'0') + '/'
        + d.getFullYear();
 }
+
+function yesterdayFR() {
+  const d = new Date();
+  d.setDate(d.getDate() - 1); // hier
+  return String(d.getDate()).padStart(2,'0') + '/'
+       + String(d.getMonth()+1).padStart(2,'0') + '/'
+       + d.getFullYear();
+}
+
 function refreshDateBadge(){
   const el = document.getElementById('todayDisplay');
   if (el) el.textContent = 'Date : ' + todayFR();
@@ -407,35 +416,36 @@ function openDailyCheckin() {
   }
 
   // 🔓 2) Sinon : ouverture normale du bilan
-  document.getElementById('bilanPanel').classList.add('hidden');
-  document.getElementById('startPanel').classList.remove('hidden');
+  document.getElementById('bilanPanel')?.classList.add('hidden');
+  document.getElementById('startPanel')?.classList.remove('hidden');
+
+  // 👇 NEW : on masque aussi le dashboard d’hier pendant le bilan
+  document.getElementById('yesterdaySummary')?.classList.add('hidden');
 }
 
-function isToday(dateStr) {
-  if (!dateStr) return false;
-
-  const today = todayFR(); // ex : "19/11/2025"
-  return dateStr === today;
-}
 
 
 
 
 function backToHome() {
-  // Réaffiche le panneau BILAN + PROFILE
+  // Réaffiche le panneau BILAN
   document.getElementById('bilanPanel')?.classList.remove('hidden');
-  document.getElementById('profileBtn')?.classList.remove('hidden');
 
   // Cache le panneau "commencer"
   document.getElementById('startPanel')?.classList.add('hidden');
+
+  // 👇 NEW : on ré-affiche la carte Résumé d’hier
+  document.getElementById('yesterdaySummary')?.classList.remove('hidden');
 }
 
+
 function openProfile() {
-  // On cache tous les panneaux liés au bilan
+  // On cache tous les panneaux liés au bilan / accueil
   document.getElementById('bilanPanel')?.classList.add('hidden');
   document.getElementById('startPanel')?.classList.add('hidden');
   document.getElementById('qaPanel')?.classList.add('hidden');
   document.getElementById('donePanel')?.classList.add('hidden');
+  document.getElementById('yesterdaySummary')?.classList.add('hidden'); // 👈 NEW
 
   // On affiche le panneau profil
   document.getElementById('profilePanel')?.classList.remove('hidden');
@@ -447,22 +457,36 @@ function openProfile() {
 
 
 
-
 function closeProfile() {
-  // On cache le profil
+  // On cache le panneau profil
   document.getElementById('profilePanel')?.classList.add('hidden');
 
-  // On revient à l'écran d'accueil (BILAN + PROFILE)
-  document.getElementById('bilanPanel')?.classList.remove('hidden');
+  // On ré-affiche les éléments de l'accueil
+  document.getElementById('yesterdaySummary')?.classList.remove('hidden');
+  document.getElementById('bilanPanel')?.classList.remove('hidden');   // 👈 IMPORTANT
+
+  // Et on revient sur l’onglet "Suivi" dans la nav du bas
+  const tab2Btn = document.querySelector('.tab-btn[data-tab="tab2"]');
+  switchTab('tab2', tab2Btn);
 }
+
+
 
 // On expose les fonctions pour les onclick dans le HTML
 window.openProfile  = openProfile;
 window.closeProfile = closeProfile;
 
 function openTodo() {
-  switchTab('tab2-todo', document.querySelector('.tab-btn[data-tab="tab1"]'));
+  // On garde l’onglet "Suivi" actif dans la barre du bas
+  const suiviBtn = document.querySelector('.tab-btn[data-tab="tab2"]');
+  switchTab('tab2-todo', suiviBtn);
 }
+
+function returnFromTodo() {
+  const tab2Btn = document.querySelector('.tab-btn[data-tab="tab2"]');
+  switchTab('tab2', tab2Btn);
+}
+
 
 function addTodo() {
   const text = prompt("Nouvelle tâche :");
@@ -507,6 +531,16 @@ function openTrainingSheet() {
 
 // On l’expose pour le HTML
 window.openTrainingSheet = openTrainingSheet;
+
+function openProfileFromSuivi() {
+  // 👉 On affiche seulement le contenu de tab1
+  goToTab(1);  // ne touche PAS à la nav du bas
+
+  // 👉 Puis on ouvre le panel profil
+  openProfile();
+}
+
+window.openProfileFromSuivi = openProfileFromSuivi;
 
 
 // ───────── Lottie – TODO list (style Scratch Mouse) ─────────
@@ -852,6 +886,98 @@ function checkBilanStatusAtStartup() {
   }
 }
 
+async function loadYesterdaySummary() {
+  console.log('loadYesterdaySummary: start');
+
+  const card      = document.getElementById('yesterdaySummary');
+  const dateEl    = document.getElementById('yesterdayDate');
+  const weightEl  = document.getElementById('yesterdayWeight');
+  const sleepEl   = document.getElementById('yesterdaySleep');
+  const stepsEl   = document.getElementById('yesterdaySteps');
+  const energyEl  = document.getElementById('yesterdayEnergy');
+
+  // Juste pour debug visuel
+  console.log('loadYesterdaySummary: elements =', {
+    card, dateEl, weightEl, sleepEl, stepsEl, energyEl
+  });
+
+  if (!card || !dateEl || !weightEl || !sleepEl || !stepsEl || !energyEl) {
+    console.warn('loadYesterdaySummary: au moins un élément est introuvable (mais on ne quitte pas)');
+    return;
+  }
+
+  // 🔹 Date d’hier
+  const yDate = yesterdayFR();
+  dateEl.textContent = yDate;
+
+  // 🔹 Reset des valeurs pendant le chargement
+  weightEl.textContent = '—';
+  sleepEl.textContent  = '—';
+  stepsEl.textContent  = '—';
+  energyEl.textContent = '—';
+
+  try {
+    const clientId = (window.__CLIENT_ID__ || '').trim();
+
+    let url = GAS_URL
+      + '?action=day_summary'
+      + '&date=' + encodeURIComponent(yDate);
+
+    if (clientId) {
+      url += '&id=' + encodeURIComponent(clientId);
+    }
+
+    console.log('loadYesterdaySummary: fetch URL =', url);
+
+    const res = await fetch(url);
+    console.log('loadYesterdaySummary: HTTP status =', res.status);
+
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    const json = await res.json();
+    console.log('loadYesterdaySummary: JSON =', json);
+
+    if (!json.ok || !json.exists) {
+      console.log('loadYesterdaySummary: aucune donnée pour hier');
+      return; // on laisse les "—"
+    }
+
+    // 🟦 Poids
+    if (typeof json.weight === 'number' && !isNaN(json.weight)) {
+      weightEl.textContent =
+        json.weight.toLocaleString('fr-FR', { maximumFractionDigits: 1 }) + ' kg';
+    }
+
+    // 😴 Sommeil
+    if (typeof json.sleepHours === 'number' && !isNaN(json.sleepHours)) {
+      if (typeof hoursToLabel === 'function') {
+        sleepEl.textContent = hoursToLabel(json.sleepHours);
+      } else {
+        const hh = Math.floor(json.sleepHours);
+        const mm = Math.round((json.sleepHours - hh) * 60);
+        sleepEl.textContent = `${hh}h${String(mm).padStart(2, '0')}`;
+      }
+    }
+
+    // 👟 Pas
+    if (typeof json.steps === 'number' && !isNaN(json.steps)) {
+      stepsEl.textContent = json.steps.toLocaleString('fr-FR') + ' pas';
+    }
+
+    // ⚡ Énergie
+    if (typeof json.energy === 'number' && !isNaN(json.energy)) {
+      energyEl.textContent = json.energy.toLocaleString('fr-FR') + ' / 5';
+    }
+
+  } catch (err) {
+    console.error('loadYesterdaySummary error:', err);
+  }
+}
+
+
+
+
+
 
 // ---------- init ----------
 logDiag('JS chargé', true);
@@ -880,10 +1006,12 @@ function submitClientLogin() {
   window.__CLIENT_ID__ = id;
   localStorage.setItem('client_id', id);
 
-  // 3) (optionnel) si plus tard tu veux utiliser CLIENT_SHEETS pour l’onglet journal,
-  // tu pourras rajouter ici un mapping, mais pas obligatoire pour l’instant.
+  // 🆕 Recharger toutes les données dynamiques
+  refreshDateBadge();
+  checkBilanStatusAtStartup();
+  loadYesterdaySummary();   // <-- 👍 parfait ici
 
-  // 🎭 4) Cacher l'écran de login + montrer l'app
+  // 🎭 4) Cacher l'écran de login + afficher l'app
   const panel = document.getElementById('loginPanel');
   if (panel) panel.classList.add('hidden');
 
@@ -895,12 +1023,13 @@ function submitClientLogin() {
 
 
 
-
-
 // 🧠 Initialisation "logique" (UI, bouton bilan...)
 document.addEventListener('DOMContentLoaded', () => {
   refreshDateBadge();
   checkBilanStatusAtStartup();
+
+  // 🆕 On tente de charger le résumé d’hier dès le démarrage
+  loadYesterdaySummary();
 
   // 🔐 Si aucun client n'est connecté → afficher l'écran de connexion
   if (window.__NEED_LOGIN__) {
@@ -910,23 +1039,33 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
+
+
+
+
 // 🌀 Initialisation des loaders Lottie (quand TOUT est chargé, y compris lottie.min.js)
 window.addEventListener('load', () => {
+
+  // 🔹 Debug
+  const dbg = document.getElementById('debugClient');
+  if (dbg) dbg.textContent = 'YS load → ' + yesterdayFR();
+
+  // 🔹 Résumé d’hier une fois tout chargé
+  loadYesterdaySummary();
+
   if (typeof lottie === 'undefined') {
     console.warn('Lottie non chargé');
     return;
   }
 
-  // Loaders existants
   initSleepLoader();
   initWeightLoader();
   initStepsLoader();
   initEnergyLoader();
   initNutriLoader();
-
-  // ✅ Init de l’animation TODO (comme Scratch Mouse pour le badge)
   initTodoAnim();
 });
+
 
 
 
@@ -1516,6 +1655,7 @@ function escapeHtml(s){
   }[m]));
 }
 
+
 // ---------- helper pour Nutrition : normaliser les entêtes ----------
 window.normalizeHeaders = window.normalizeHeaders || function(headers){
   // ex: "Portion (g)" -> "portion_g"
@@ -1875,17 +2015,24 @@ function goToTab(n) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById(targetId)?.classList.add('active');
 
-  // Si on revient à l'accueil, on remet l'état propre
+  // Si on revient à l'accueil, on remet TOUT propre
   if (n === 1) {
+    // Boutons de l'accueil
     document.getElementById('bilanPanel')?.classList.remove('hidden');
+
+    // On cache les panneaux du flow bilan / profil
     document.getElementById('startPanel')?.classList.add('hidden');
     document.getElementById('qaPanel')?.classList.add('hidden');
     document.getElementById('donePanel')?.classList.add('hidden');
     document.getElementById('profilePanel')?.classList.add('hidden');
+
+    // ✅ On ré-affiche le dashboard "Résumé d’hier"
+    document.getElementById('yesterdaySummary')?.classList.remove('hidden');
   }
 }
 
 window.goToTab = goToTab;
+
 
 // 🔹 Ouvrir la page Nutrition depuis l'accueil (tab1)
 function goToNutrition() {
