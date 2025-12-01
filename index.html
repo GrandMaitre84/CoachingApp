@@ -57,26 +57,44 @@
 
 
   <main>
-    <!-- Onglet 1 -->
-    <section id="tab1" class="tab active">
-      <div class="date-row">
-        <span id="todayDisplay" class="date-pill">Date : --/--/----</span>
+
+  <!-- Onglet 1 -->
+  <section id="tab1" class="tab active">
+
+
+
+
+    <!-- (puis ton contenu d'accueil : bilan du jour, profil, dashboard…) -->
+
+
+    <!-- 🟢 Résumé d’hier -->
+    <div id="yesterdaySummary" class="yesterday-card home-anim">
+
+
+      <!-- 🔹 Date du jour (discrète en haut à gauche du bloc) -->
+      <div class="yesterday-today-row">
+        <span id="todayDisplay" class="yesterday-today-pill">--/--/----</span>
       </div>
 
-      <!-- 🟢 Résumé d’hier -->
-      <div id="yesterdaySummary" class="yesterday-card">
-        <div class="yesterday-header">
-          <div class="yesterday-title-wrap">
-            <span class="yesterday-icon">📊</span>
-            <div>
-              <div class="yesterday-title">Résumé d’hier</div>
-              <div class="yesterday-subtitle">Un coup d’œil sur ta dernière journée</div>
-            </div>
+      <!-- 🔹 En-tête titre + date d’hier -->
+      <div class="yesterday-header">
+        <div class="yesterday-title-wrap">
+          <span class="yesterday-icon">📊</span>
+          <div>
+            <div class="yesterday-title">Résumé d’hier</div>
+            <div class="yesterday-subtitle">Un coup d’œil sur ta dernière journée</div>
           </div>
-          <span id="yesterdayDate" class="chip chip-soft">--/--/----</span>
         </div>
 
-        <div class="yesterday-grid">
+        <!-- Date d’hier -->
+        <span id="yesterdayDate" class="chip chip-soft">--/--/----</span>
+      </div>
+
+      <div class="yesterday-grid">
+
+
+
+          
           <!-- Sommeil -->
           <div class="yesterday-item">
             <div class="yesterday-item-label">
@@ -118,12 +136,12 @@
 
       
       <!-- Nouveau bouton principal -->
-      <div id="bilanPanel">
-        <button id="bilanBtn" class="primary" onclick="openDailyCheckin()">BILAN DU JOUR</button>
-        <button class="primary" onclick="openTrainingPage()" style="margin-top: 12px;">TRAINING</button>
-        <button type="button" class="primary" onclick="goToNutrition()">NUTRITION</button>
+     <div id="bilanPanel">
+       <button id="bilanBtn" class="primary home-anim" onclick="openDailyCheckin()">BILAN DU JOUR</button>
+       <button class="primary home-anim" onclick="openTrainingPage()" style="margin-top: 12px;">TRAINING</button>
+       <button type="button" class="primary home-anim" onclick="goToNutrition()">NUTRITION</button>
+     </div>
 
-      </div>
 
 
 
