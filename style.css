@@ -39,16 +39,32 @@ main{
   max-width:430px;
   margin:0 auto;
 }
-.tab{
-  display:none;
-  background:var(--surface);
-  border:1px solid var(--line);
-  border-radius:14px;
-  padding:16px;
-  box-shadow:0 8px 20px rgba(0,0,0,.05);
+
+/* === Onglets avec bordure + dégradé pastel ÉLÉGANT ET VISIBLE === */
+.tab {
+  display: none;
+
+  /* 🎨 Dégradé pastel bleu → blanc bleuté */
+  background: linear-gradient(
+    135deg,
+    #d8ecff 0%,   /* bleu très clair */
+    #f3f9ff 60%,  /* blanc légèrement bleuté */
+    #ffffff 100%  /* blanc pur pour douceur */
+  );
+
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+
+  /* pas d'ombre, les cartes déjà ont du relief */
+  box-shadow: none;
+
+  min-height: calc(100vh - 90px);
 }
-.tab.active{ display:block; }
-.hidden{ display:none; }
+
+.tab.active { display:block; }
+.hidden { display:none; }
+
 
 /* Boutons */
 .primary{
@@ -355,16 +371,8 @@ pre{
   box-shadow: 0 3px 8px rgba(0,0,0,.12);
 }
 
-/* Bloc total nutrition amélioré */
-.meal-total {
-  display: flex;
-  justify-content: center;
-  flex-wrap: nowrap;
-  gap: 0; /* on va gérer via les bordures */
-  padding: 12px 0;
-  border-top: 1px solid var(--line);
-  margin-top: 10px;
-}
+
+
 
 /* Chaque macro */
 .meal-total .pill {
@@ -437,23 +445,35 @@ pre{
   background: #95f4e9; /* vert très léger */
 }
 
-/* Centrage des totaux par repas */
+/* Bloc total nutrition — propre, centré, reste dans la carte */
 .meal-total {
   display: flex;
-  justify-content: space-evenly;
+  justify-content: space-evenly;  /* espace égal entre les 4 cases */
   align-items: center;
+  flex-wrap: nowrap;
+
+  padding: 10px 8px;              /* léger padding interne */
+  margin-top: 10px;
+
+  border-top: 1px solid var(--line);
   text-align: center;
 }
 
+/* Chaque case (kcal, P, G, L) */
 .meal-total .pill {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 6px 4px;
-  font-size: 13px;
-  width: 70px; /* force largeur uniforme */
+
+  padding: 4px 4px;
+  font-size: 12px;
+
+  flex: 1 1 0;                    /* 4 colonnes égales */
+  width: auto;                    /* ❌ plus de largeur fixe */
+  box-sizing: border-box;
 }
+
 
 .meal-total .pill small {
   font-size: 11px;
@@ -1195,16 +1215,28 @@ button.primary:disabled {
   color: var(--primary);
 }
 
-/* Input centré + stylé */
 #loginPanel input {
-  width: 100%;
-  padding: 10px;
-  margin: 10px 0;        /* espace au-dessus et en dessous */
+  width: 80%;
+  max-width: 240px;
+  padding: 8px 12px;
+
+  margin: 12px auto;      /* centre l’input automatiquement */
   border-radius: 10px;
-  border: 1px solid #ccc;
-  text-align: center;    /* centre le texte */
-  display: block;        /* permet le centrage horizontal */
+  border: 2px solid #ccc;
+
+  text-align: center;
+  font-size: 15px;
+
+  display: block;
+  transition: 0.2s ease;
 }
+
+#loginPanel input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(100, 200, 255, 0.25);
+  outline: none;
+}
+
 
 #debugClient {
   display: none !important;
@@ -1549,3 +1581,95 @@ button.primary:disabled {
   border-radius: 8px;
   backdrop-filter: blur(6px);
 }
+
+/* 🌿 Nutrition : enlever le gros bloc autour des repas */
+#tab2-nutrition .card {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+/* On redonne un peu d’air autour du contenu */
+#tab2-nutrition .nutri-content-wrap {
+  margin-top: 10px;
+}
+
+/* Le bouton "← Retour" garde son espace au-dessus */
+#tab2-nutrition .back {
+  margin-bottom: 12px;
+}
+
+/* === Réorganisation de la ligne portion + macros === */
+/* On met la portion au-dessus, les macros centrées en dessous */
+
+/* ===== Ligne portion + macros : alignée sur les 4 colonnes du total ===== */
+
+.meal-row-bottom {
+  display: flex;
+  flex-direction: column;   /* 1) portion au-dessus, 2) macros dessous */
+  align-items: stretch;
+  gap: 4px;
+}
+
+/* Portion (100 g / 50 g) centrée sur la ligne */
+.meal-row-bottom .food-portion {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Zone des 4 bulles : prend toute la largeur, comme le total */
+.meal-row-bottom .macros {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;  /* 4 "colonnes" */
+  gap: 0;
+}
+
+/* Chaque bulle occupe 1/4 de la largeur → alignée avec le total */
+.meal-row-bottom .macros span {
+  flex: 1 1 0;         /* 4 parts égales */
+  min-width: 0;
+  text-align: center;
+  padding: 3px 6px;
+  font-size: 11px;
+  box-sizing: border-box;
+}
+
+.meal-row .food-portion {
+  background: #e5f2ff;         /* bleu clair discret */
+  color: #1b6ec2;              /* bleu lisible */
+  font-weight: 600;
+
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-size: 13px;
+
+  display: inline-block;
+  margin-bottom: 6px;
+}
+
+.nutri-content-wrap {
+  background: transparent !important;
+  min-height: 0 !important;  /* enlève la hauteur forcée */
+}
+
+#nutriLoader {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+
+  width: 140px !important;
+  height: 140px !important;
+
+  background: none !important;
+  display: none;
+  z-index: 9999;      /* toujours au-dessus */
+}
+
+#nutriLoader.visible {
+  display: block !important;
+}
+
