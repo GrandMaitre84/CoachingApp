@@ -2295,11 +2295,7 @@ document.addEventListener("click", (e) => {
   }
 });
 
-function forceTapEffect(el) {
-  if (!el) return;
-  el.classList.add("tap-effect");
-  setTimeout(() => el.classList.remove("tap-effect"), 1000); // 1 seconde
-}
+
 
 function openSleepTile(el) {
   if (el) forceTapEffect(el); // Effet immédiat au tap
