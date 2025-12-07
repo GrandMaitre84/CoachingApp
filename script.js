@@ -2298,10 +2298,12 @@ document.addEventListener("click", (e) => {
 
 
 function openSleepTile(el) {
-  if (el) forceTapEffect(el); // Effet immédiat au tap
-
-  // Changer de page instantanément
+  // 1) On change d'onglet comme avant
   const navBtn = document.querySelector('.tab-btn[data-tab="tab2"]');
   switchTab('tab2-sleep', navBtn);
-}
 
+  // 2) On force l'animation du panneau Sommeil (même effet que les onglets)
+  setTimeout(() => {
+    animatePanel('tab2-sleep');
+  }, 0);
+}
