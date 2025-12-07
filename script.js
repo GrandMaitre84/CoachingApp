@@ -419,9 +419,13 @@ function openDailyCheckin() {
   document.getElementById('bilanPanel')?.classList.add('hidden');
   document.getElementById('startPanel')?.classList.remove('hidden');
 
-  // 👇 NEW : on masque aussi le dashboard d’hier pendant le bilan
+  // 🎬 Animation douce du panneau de démarrage
+  animatePanel('startPanel');
+
+  // 👇 On masque aussi le dashboard d’hier pendant le bilan
   document.getElementById('yesterdaySummary')?.classList.add('hidden');
 }
+
 
 
 
@@ -445,15 +449,19 @@ function openProfile() {
   document.getElementById('startPanel')?.classList.add('hidden');
   document.getElementById('qaPanel')?.classList.add('hidden');
   document.getElementById('donePanel')?.classList.add('hidden');
-  document.getElementById('yesterdaySummary')?.classList.add('hidden'); // 👈 NEW
+  document.getElementById('yesterdaySummary')?.classList.add('hidden');
 
   // On affiche le panneau profil
   document.getElementById('profilePanel')?.classList.remove('hidden');
 
-  // On recharge TOUT à chaque ouverture :
-  loadProfileData();        // nom, âge, début, score santé, points santé + barre
-  loadProfileStepsTotal();  // steps + distance
+  // 🎬 Animation douce
+  animatePanel('profilePanel');
+
+  // On recharge les données
+  loadProfileData();
+  loadProfileStepsTotal();
 }
+
 
 
 
@@ -499,12 +507,13 @@ function addTodo() {
   const id = "todo-" + Math.random().toString(36).slice(2);
 
   div.innerHTML = `
-    <input type="checkbox" id="${id}" onchange="completeTodo(this)">
+    <input type="checkbox" id="${id}">
     <label for="${id}" class="todo-text">${text}</label>
   `;
 
   wrap.appendChild(div);
 }
+
 
 function openTrainingPage() {
   switchTab('tab2-training');
@@ -636,16 +645,38 @@ if (todoWrap) {
     const item = cb.closest('.todo-item');
     if (!item) return;
 
-    // 🚀 1) Animation instantanée
+    // 🔹 1) Mise à jour instantanée de l’UI (ex- logique completeTodo)
+    const ptsEl = document.getElementById("profileHealthPoints");
+    const barEl = document.getElementById("healthBar");
+    if (ptsEl) {
+      let current = Number(ptsEl.textContent.split("/")[0]) || 0;
+      current += TODO_POINTS_PER_TASK;
+
+      const scoreEl = document.getElementById("profileHealthScore");
+      if (current >= 100) {
+        current -= 100;
+        if (scoreEl) {
+          let score = Number(scoreEl.textContent) || 0;
+          scoreEl.textContent = score + 1;
+        }
+      }
+
+      ptsEl.textContent = `${current} / 100`;
+      if (barEl) {
+        barEl.style.width = current + "%";
+      }
+    }
+
+    // 🔹 2) Animation Lottie immédiate
     playTodoAnimation();
 
-    // 🧽 2) Effet visuel + disparition
+    // 🔹 3) Effet visuel + disparition
     item.classList.add('done');
     setTimeout(() => {
       item.remove();
     }, 450);
 
-    // 📨 3) Appel Apps Script (en arrière-plan, sans bloquer l’anim)
+    // 🔹 4) Appel Apps Script (en arrière-plan, sans bloquer l’anim)
     try {
       const clientId = (window.__CLIENT_ID__ || '').trim();
 
@@ -681,6 +712,9 @@ function startQA(){
   $('#qaPanel').classList.remove('hidden');
   $('#donePanel').classList.add('hidden');
 
+  // 🎬 Animation d’entrée du panneau Q&A
+  animatePanel('qaPanel');
+
   // montrer Valider dès le début du Q&A
   const btn = document.getElementById('submitAnswer');
   if (btn) btn.style.display = 'block';
@@ -689,6 +723,7 @@ function startQA(){
   showQuestion();
 }
 window.startQA = startQA;
+
 
 function showQuestion() {
   const total = QUESTIONS.length;
@@ -710,9 +745,10 @@ function showQuestion() {
   const titleEl = document.getElementById('questionText');
   if (titleEl) titleEl.textContent = q.label;
 
-  // Petit texte "Étape X / Y"
+  // Petit texte en haut : on le désactive
   const stepEl = document.getElementById('questionStep');
-  if (stepEl) stepEl.textContent = `Étape ${state.idx + 1} / ${total}`;
+  if (stepEl) stepEl.textContent = '';
+
 
   // Zone input
   const slot = document.getElementById('inputSlot');
@@ -739,7 +775,13 @@ function showQuestion() {
 
   const btn = document.getElementById('submitAnswer');
   if (btn) btn.style.display = 'block';
-}
+
+   // 🔙 Bouton retour
+    const backBtn = document.getElementById('goBackAnswer');
+    if (backBtn) {
+      backBtn.style.display = state.idx > 0 ? 'block' : 'none';
+    }
+  }
 
 
 function submitAnswer(){
@@ -771,6 +813,9 @@ function finishAndSend() {
   $('#qaPanel').classList.add('hidden');
   $('#donePanel').classList.remove('hidden');
 
+  // 🎬 Animation d’entrée du panneau de fin
+  animatePanel('donePanel');
+
   const btn = document.getElementById('submitAnswer');
   if (btn) btn.style.display = 'none';
 
@@ -791,6 +836,33 @@ function finishAndSend() {
     bilanBtn.classList.add('disabled'); // tu as déjà le CSS pour ça
   }
 }
+
+ function goBackQuestion() {
+   // On ne peut pas remonter avant la première question
+   if (state.idx <= 0) return;
+
+   // On revient à la question précédente
+   state.idx -= 1;
+
+   // On recharge la question
+   showQuestion();
+
+   // On remet la réponse déjà donnée si elle existe
+   const q = QUESTIONS[state.idx];
+   const prevVal = state.answers[q.col];
+   const input = document.getElementById('answerInput');
+   if (input && prevVal !== undefined) {
+     input.value = prevVal;
+   }
+
+   // Bouton retour visible seulement si on n'est pas sur la première question
+   const backBtn = document.getElementById('goBackAnswer');
+   if (backBtn) {
+     backBtn.style.display = state.idx > 0 ? 'block' : 'none';
+   }
+ }
+
+
 
 
 
@@ -982,6 +1054,16 @@ async function loadYesterdaySummary() {
 // ---------- init ----------
 logDiag('JS chargé', true);
 
+// 🔁 Petite animation quand un panneau apparaît
+function animatePanel(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  el.classList.remove('panel-anim');
+  void el.offsetWidth; // force reflow pour rejouer l'anim
+  el.classList.add('panel-anim');
+}
+
 function submitClientLogin() {
   const input = document.getElementById('loginInput');
   const raw   = (input && input.value ? input.value : '').trim();
@@ -994,6 +1076,8 @@ function submitClientLogin() {
 
   const id = raw.toLowerCase();
 
+
+  
   // 🔐 1) Vérifier que l'ID existe bien dans TRAINING_SHEETS
   const knownIds = Object.keys(TRAINING_SHEETS || {});
   if (!knownIds.includes(id)) {
@@ -1036,10 +1120,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('loginPanel')?.classList.remove('hidden');
     document.querySelector('main')?.classList.add('hidden');
   }
+
+  // 🆕 Met à jour l’affichage de la version au démarrage
+  updateVersionVisibility();
 });
-
-
-
 
 
 
@@ -1049,9 +1133,6 @@ window.addEventListener('load', () => {
   // 🔹 Debug
   const dbg = document.getElementById('debugClient');
   if (dbg) dbg.textContent = 'YS load → ' + yesterdayFR();
-
-  // 🔹 Résumé d’hier une fois tout chargé
-  loadYesterdaySummary();
 
   if (typeof lottie === 'undefined') {
     console.warn('Lottie non chargé');
@@ -1073,19 +1154,32 @@ window.addEventListener('load', () => {
 
 // ───────── Sous-onglets onglet 2 ─────────
 function openTab2View(name){
-  // Masquer le menu et les vues
-  document.getElementById('tab2-menu')?.classList.add('hidden');
+  // 1) On cache le menu principal de l’onglet Suivi
+  const menu = document.getElementById('tab2-menu');
+  if (menu) menu.classList.add('hidden');
+
+  // 2) On cache les vues détaillées déjà connues
   document.getElementById('tab2-sleep')?.classList.add('hidden');
   document.getElementById('tab2-weight')?.classList.add('hidden');
 
-  // Afficher la vue demandée
-  const target = document.getElementById('tab2-' + name);
-  if (target) target.classList.remove('hidden');
+  // 3) On affiche la vue demandée
+  const targetId = 'tab2-' + name;
+  const target   = document.getElementById(targetId);
+  if (target) {
+    target.classList.remove('hidden');
 
-  // Lazy-load : ne charge le graphe que quand la vue est ouverte
+    // 🎬 animation d’apparition, comme pour le bilan/profil
+    animatePanel(targetId);
+  }
+
+  // 4) Lazy-load du graphe selon la vue ouverte
   if (name === 'sleep')  loadSleepChart();
   if (name === 'weight') loadWeightChart();
 }
+
+
+window.openTab2View = openTab2View;
+
 
 function backFromTab2(){
   document.getElementById('tab2-menu')?.classList.remove('hidden');
@@ -1247,7 +1341,12 @@ function hoursToLabel(h){
   return `${hh}h${String(mm).padStart(2,'0')}`;
 }
 
-async function loadSleepChart(){
+async function loadSleepChart() {
+  // ⛔ Si le graphique existe déjà, on ne relance ni fetch ni animation
+  if (sleepChart) {
+    return;
+  }
+
   const loader = document.getElementById('sleepLoader');
 
   // 🌀 Si l’animation n’est pas encore initialisée, on tente maintenant
@@ -1255,7 +1354,7 @@ async function loadSleepChart(){
     initSleepLoader();
   }
 
-  // 👀 Afficher le loader avant la requête
+  // 👀 Afficher le loader seulement au premier chargement
   if (loader) loader.classList.add('visible');
   if (sleepLoaderAnim) sleepLoaderAnim.play();
 
@@ -1280,6 +1379,7 @@ async function loadSleepChart(){
   if (loader) loader.classList.remove('visible');
   if (sleepLoaderAnim) sleepLoaderAnim.stop();
 }
+
 
 
 
@@ -1427,42 +1527,48 @@ function initStepsLoader() {
   });
 }
 
-async function loadStepsChart(){
+async function loadStepsChart() {
+
+  // ⛔ Empêche la recréation d’un graphique déjà existant
+  if (stepsChart) {
+    return;
+  }
+
   const loader = document.getElementById('stepsLoader');
 
-  // 👀 Afficher le loader SEULEMENT si le graphique n'existe pas encore
-  if (!stepsChart && loader) {
-    loader.classList.add('visible');
-  }
-  if (!stepsChart && stepsLoaderAnim) {
-    stepsLoaderAnim.play();
-  }
+  // Affiche l’animation uniquement au premier chargement
+  if (loader) loader.classList.add('visible');
+  if (stepsLoaderAnim) stepsLoaderAnim.play();
 
   try {
     const clientId = (window.__CLIENT_ID__ || '').trim();
     const url = GAS_URL + '?action=steps'
       + (SHEET_TAB ? ('&sheet=' + encodeURIComponent(SHEET_TAB)) : '')
       + (clientId ? ('&id=' + encodeURIComponent(clientId)) : '');
+
     const res = await fetch(url);
+
     let data = [];
     if (res.ok) {
       const json = await res.json();
-      if (json && json.ok && Array.isArray(json.data)) data = json.data;
+      if (json && json.ok && Array.isArray(json.data)) {
+        data = json.data;
+      }
     }
+
+    // Rend le graphique (crée stepsChart)
     renderStepsChart(data);
+
   } catch (err) {
     console.error('loadStepsChart error:', err);
     renderStepsChart([]);
   }
 
-  // 🧹 Cacher le loader après le rendu (ou en cas d’erreur)
-  if (loader) {
-    loader.classList.remove('visible');
-  }
-  if (stepsLoaderAnim) {
-    stepsLoaderAnim.stop();
-  }
+  // On coupe le loader une fois terminé
+  if (loader) loader.classList.remove('visible');
+  if (stepsLoaderAnim) stepsLoaderAnim.stop();
 }
+
 
 
 function renderStepsChart(points){
@@ -1533,13 +1639,18 @@ function renderStepsChart(points){
 }
 
 async function loadEnergyChart() {
+  // ⛔ Si le graphique existe déjà, on ne relance rien
+  if (energyChart) {
+    return;
+  }
+
   const loader = document.getElementById('energyLoader');
 
   // 👀 Afficher le loader seulement au premier chargement
-  if (!energyChart && loader) {
+  if (loader) {
     loader.classList.add('visible');
   }
-  if (!energyChart && energyLoaderAnim) {
+  if (energyLoaderAnim) {
     energyLoaderAnim.play();
   }
 
@@ -1568,6 +1679,7 @@ async function loadEnergyChart() {
     energyLoaderAnim.stop();
   }
 }
+
 
 function renderEnergyChart(points) {
   const badge    = document.getElementById('lastEnergyBadge');
@@ -1677,16 +1789,22 @@ async function openNutritionPage(){
   const loader = document.getElementById('nutriLoader');
   if (!box) return;
 
-  // 🔥 1) Afficher le loader IMMÉDIATEMENT
-  if (loader) loader.classList.add('visible');
-  if (typeof nutriLoaderAnim !== 'undefined' && nutriLoaderAnim) {
+  // 🔥 1) Afficher le loader IMMÉDIATEMENT à la première ouverture
+  if (loader) {
+    loader.classList.add('visible');
+  }
+  // Si l’anim Lottie n’est pas encore prête, on tente de l’init
+  if (!nutriLoaderAnim && typeof lottie !== 'undefined') {
+    initNutriLoader();
+  }
+  if (nutriLoaderAnim) {
     nutriLoaderAnim.play();
   }
 
   try {
     // Si pas de barre de jours, on charge juste l’onglet par défaut
     if (!days) {
-      await loadNutrition('Nutrition');
+      await loadNutrition('Nutrition'); // loadNutrition gère toujours le hide du loader
       return;
     }
 
@@ -1717,7 +1835,7 @@ async function openNutritionPage(){
     if (nutrTabs.length === 1){
       days.innerHTML = '';
       if (meta) meta.textContent = '1 jour';
-      await loadNutrition(nutrTabs[0]);
+      await loadNutrition(nutrTabs[0]);  // loadNutrition cache le loader
       return;
     }
 
@@ -1737,7 +1855,7 @@ async function openNutritionPage(){
     days.innerHTML = html;
     if (meta) meta.textContent = nutrTabs.length + ' jours';
 
-    // Sélection par défaut
+    // Sélection par défaut → va appeler loadNutrition() et gérer la fin du loader
     if (nutrTabs[0]) {
       window.selectNutritionDay(nutrTabs[0]);
     }
@@ -1746,14 +1864,9 @@ async function openNutritionPage(){
     console.error('openNutritionPage error:', err);
     box.innerHTML = '<p class="note err">Erreur lors du chargement de la nutrition.</p>';
     if (meta) meta.textContent = 'Erreur';
-  } finally {
-    // ✅ 2) Couper le loader quand tout est fini (succès ou erreur)
-    if (loader) loader.classList.remove('visible');
-    if (typeof nutriLoaderAnim !== 'undefined' && nutriLoaderAnim) {
-      nutriLoaderAnim.stop();
-    }
   }
 }
+
 
 
 // Fonction globale pour changer de jour
@@ -1831,6 +1944,7 @@ async function loadNutrition(sheetName){
 
     const { headers, rows } = json;
 
+    
     // helpers
     const headersNorm  = normalizeHeaders(headers);
     const stripAcc     = s => String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
@@ -1974,6 +2088,8 @@ async function loadNutrition(sheetName){
     }
 
     box.innerHTML = html;
+    // 🎬 Animation quand le programme nutrition est prêt
+    animatePanel('tab2-nutrition');
     nutrLoaded = true;
 
   } catch(err){
@@ -1988,25 +2104,37 @@ async function loadNutrition(sheetName){
 
 
 
-
-
 // ───────── Navigation + lazy-load des graphes (sous-pages de l’onglet 2) ─────────
-(function(){
-  const baseSwitch = window.switchTab || function(targetId, btn){
+(function () {
+  const baseSwitch = window.switchTab || function (targetId, btn) {
+    // nav bas (onglets principaux)
     document.querySelector('.tab-btn.active')?.classList.remove('active');
     if (btn) btn.classList.add('active');
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-    document.getElementById(targetId)?.classList.add('active');
+
+    // on masque tous les gros panneaux
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+
+    // on active le bon
+    const panel = document.getElementById(targetId);
+    if (panel) panel.classList.add('active');
   };
 
-  window.switchTab = function(targetId, btn){
+  window.switchTab = function (targetId, btn) {
+    // logique de base
     baseSwitch(targetId, btn);
+
+    // ⚡ animation douce sur le panneau ouvert (tab2, tab2-sleep, tab2-weight, etc.)
+    animatePanel(targetId);
+
+    // lazy-load des graphes
     if (targetId === 'tab2-weight') loadWeightChart();
     if (targetId === 'tab2-sleep')  loadSleepChart();
     if (targetId === 'tab2-steps')  loadStepsChart();
-    if (targetId === 'tab2-energy') loadEnergyChart(); 
+    if (targetId === 'tab2-energy') loadEnergyChart();
   };
 })();
+
+
 
 function goToTab(n) {
   const targetId = 'tab' + n;
@@ -2029,6 +2157,8 @@ function goToTab(n) {
     // ✅ On ré-affiche le dashboard "Résumé d’hier"
     document.getElementById('yesterdaySummary')?.classList.remove('hidden');
   }
+  // 🔄 MAJ de l’affichage de la version
+  updateVersionVisibility();
 }
 
 window.goToTab = goToTab;
@@ -2115,7 +2245,7 @@ function openNutritionFromHome() {
 }
 
 
-setInterval(() => {
+function updateVersionVisibility() {
   const version = document.getElementById("appVersion");
   if (!version) return;
 
@@ -2128,8 +2258,6 @@ setInterval(() => {
                         ? document.querySelector("#tab2-todo")?.classList.contains("active")
                         : false;
 
-  // RÈGLE SIMPLE :
-  // 👉 Version visible seulement si on est dans TAB 1 et aucun panneau interne
   const shouldShow =
     isTab1 &&
     bilanVisible &&
@@ -2138,17 +2266,24 @@ setInterval(() => {
     !todoVisible;
 
   version.style.display = shouldShow ? "block" : "none";
-}, 200);
+}
 
 
-// 🔊 CLICK SOUND EFFECT — version Web Audio (moins de latence)
+
+// 🔊 CLICK SOUND EFFECT — version filtrée (seulement sur vrais boutons)
 document.addEventListener("click", (e) => {
-  // Clic sur la nav barre ou les boutons d’onglet → son spécial
-  if (e.target.closest(".bottom-nav") || e.target.closest(".tab-btn")) {
-    playSfx('clickTab');
-    return;
-  }
+  // Boutons de la barre du bas (Accueil / Suivi / Paramètres)
+  const tabBtn = e.target.closest(".bottom-nav .tab-btn");
 
-  // Tous les autres clics → son normal
-  playSfx('click');
+  // Gros boutons de l’app (Bilan du jour, Training, Nutrition, Valider, tuiles Suivi, etc.)
+  const mainBtn = e.target.closest(
+    "button, .primary, .secondary, #tab2-menu button.tile"
+  );
+
+  if (tabBtn) {
+    playSfx("clickTab");
+  } else if (mainBtn) {
+    playSfx("click");
+  }
+  // Sinon : pas de son (clic dans un input, texte, scroll, etc.)
 });
