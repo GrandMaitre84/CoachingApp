@@ -10,6 +10,11 @@
   --err:#d64545;         /* rouge erreur */
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+
 body{
   margin:0;
   font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
@@ -40,30 +45,73 @@ main{
   margin:0 auto;
 }
 
-/* === Onglets avec bordure + dégradé pastel ÉLÉGANT ET VISIBLE === */
+/* === Onglets avec bordure + dégradé pastel + transition douce === */
 .tab {
   display: none;
 
-  /* 🎨 Dégradé pastel bleu → blanc bleuté */
   background: linear-gradient(
     135deg,
-    #d8ecff 0%,   /* bleu très clair */
-    #f3f9ff 60%,  /* blanc légèrement bleuté */
-    #ffffff 100%  /* blanc pur pour douceur */
+    #d8ecff 0%,
+    #f3f9ff 60%,
+    #ffffff 100%
   );
 
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 16px;
-
-  /* pas d'ombre, les cartes déjà ont du relief */
   box-shadow: none;
 
   min-height: calc(100vh - 90px);
+
+  /* ➕ Animation subtile */
+  opacity: 0;
+  transform: translateY(3px); /* plus léger */
 }
 
-.tab.active { display:block; }
-.hidden { display:none; }
+.tab.active {
+  display: block;
+
+  opacity: 1;
+  transform: translateY(0);
+  animation: tabFade 0.18s ease-out; /* discret & premium */
+}
+
+.hidden { display: none; }
+
+
+@keyframes tabFade {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 🔁 Animation réutilisable pour les panneaux internes (bilan, profil, etc.) */
+.panel-anim {
+  animation: tabFade 0.18s ease-out;
+}
+
+/* Animation des cartes nutrition quand le panel se recharge */
+#tab2-nutrition.panel-anim .meal-card {
+  opacity: 0;
+  animation: tabFade 0.22s ease-out forwards;
+}
+
+/* Petit décalage pour un effet "cascade" clean */
+#tab2-nutrition.panel-anim .meal-card:nth-child(2) {
+  animation-delay: 0.03s;
+}
+#tab2-nutrition.panel-anim .meal-card:nth-child(3) {
+  animation-delay: 0.06s;
+}
+#tab2-nutrition.panel-anim .meal-card:nth-child(4) {
+  animation-delay: 0.09s;
+}
+
 
 
 /* Boutons */
@@ -694,7 +742,7 @@ pre{
 
 .app-version {
   position: fixed;
-  right: 10px;
+  right: 28px;
   bottom: calc(70px + 8px + env(safe-area-inset-bottom)); /* juste au-dessus de la barre du bas */
 
   font-size: 12px;
@@ -908,14 +956,14 @@ button.primary:disabled {
   border-color: #ccf5e9;
 }
 
-/* ===========================
-   🦶 PAS — coloration douce
-   =========================== */
+/* 🦶 PAS — coloration douce */
 .steps-avg-card,
-#stepsAvgBlock {
+#stepsAvgCard,
+.summary-steps {
   background: #f0fffa;      /* vert/turquoise pastel */
   border-color: #ccf5e9;
 }
+
 
 /* ⚡ ÉNERGIE — coloration douce */
 .energy-avg-card,
@@ -1103,22 +1151,6 @@ button.primary:disabled {
   letter-spacing: 0.3px;
 }
 
-/* ===== Titre "Programme nutrition" ===== */
-.nutrition-title {
-  text-align: center;
-  font-size: 18px;
-  font-weight: 800;
-
-  margin: 12px 0 12px;
-  padding: 10px 16px;
-
-  background: #f0f5ff;
-  color: #1e3a8a;
-  border: 1px solid #d5e3ff;
-  border-radius: 12px;
-
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
 
 /* ============================
    🎬 Loader Lottie – graphiques
@@ -1248,7 +1280,7 @@ button.primary:disabled {
 
 .yesterday-card {
   margin-top: 10px;
-  margin-bottom: 22px; /* un peu plus d’air */
+  margin-bottom: 28px; /* un peu plus d’air */
   padding: 16px;
   border-radius: 18px;
   background: linear-gradient(135deg, #6EE7FF, #7DFCC2);
@@ -1352,27 +1384,32 @@ button.primary:disabled {
   background: rgba(255, 255, 255, 0.45);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.6);
+
+  /* 👉 centre le contenu dans chaque petite carte */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
-/* Ligne label (emoji + texte) */
 .yesterday-item-label {
   font-size: 11px;
   opacity: 0.8;
   margin-bottom: 4px;
+
+  /* 👉 on garde le flex, mais on centre aussi */
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
 }
 
-.yesterday-emoji {
-  font-size: 16px;
-}
-
-/* Valeur principale (grosse) */
 .yesterday-value {
   font-size: 16px;
   font-weight: 700;
+  text-align: center;
 }
+
 
 /* Animation d’apparition */
 @keyframes summaryFade {
@@ -1447,33 +1484,7 @@ button.primary:disabled {
   width: 100%;
 }
 
-/* Style unique des tuiles SOMMEIL / POIDS / PAS / ÉNERGIE / PROFIL / TODO */
-#tab2-menu .tile,
-#tab2-menu button.tile {
-  all: unset;
-  box-sizing: border-box;
 
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-
-  width: 100%;
-  min-height: 100px;
-  padding: 18px;
-
-  background: linear-gradient(135deg, #4da6ff, #52e0c8);
-  border-radius: 18px;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
-
-  font-weight: 700;
-  font-size: 15px;
-  text-align: center;
-  color: #ffffff;
-
-  cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
-}
 
 /* Effet clic */
 #tab2-menu .tile:active,
@@ -1489,7 +1500,7 @@ button.primary:disabled {
   pointer-events: none;
 }
 
-/* === TUILES "MON SUIVI" AVEC RELIEF === */
+/* === TUILES "MON SUIVI" AVEC RELIEF (même ombre que Accueil) === */
 #tab2-menu button.tile {
   all: unset;
   box-sizing: border-box;
@@ -1503,15 +1514,14 @@ button.primary:disabled {
   min-height: 100px;
   padding: 18px;
 
-  /* même gradient que tes blocs actuels */
   background: linear-gradient(135deg, #4da6ff, #52e0c8);
   border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.6);
 
-  /* 💡 vrai effet de profondeur */
+  /* 💡 même ombre que les boutons d’accueil */
   box-shadow:
-    0 18px 35px rgba(15, 23, 42, 0.30),  /* ombre principale */
-    0 0 0 1px rgba(15, 23, 42, 0.05);    /* léger contour */
+    0 8px 18px rgba(15, 23, 42, 0.22),
+    0 0 0 1px rgba(255,255,255,0.25) inset;
 
   font-weight: 700;
   font-size: 15px;
@@ -1524,7 +1534,11 @@ button.primary:disabled {
     transform 0.18s ease,
     box-shadow 0.18s ease,
     opacity 0.18s ease;
+
+  /* 🔥 anim d’apparition comme tu voulais */
+  animation: homeFade 0.35s ease-out;
 }
+
 
 #tab2-menu button.tile:active {
   transform: translateY(1px) scale(0.97);
@@ -1539,13 +1553,6 @@ button.primary:disabled {
   pointer-events: none;
 }
 
-#tab2-menu button.tile {
-  animation: homeFade 0.35s ease-out;
-}
-
-#tab2-title {
-  animation: homeFade 0.35s ease-out;
-}
 
 .yesterday-dates-row {
   display: flex;
@@ -1673,3 +1680,40 @@ button.primary:disabled {
   display: block !important;
 }
 
+.home-anim {
+  animation: homeFade 0.35s ease-out;
+}
+
+#loginPanel {
+  background: #eaf6ff; /* IDENTIQUE au fond des onglets */
+  min-height: 100vh;
+  width: 100%;
+}
+
+#tab2-nutrition .card-header h2 {
+  display: block;
+
+  /* largeur réelle identique au bouton Retour */
+  width: 100%;
+  margin: 0 auto 16px auto;
+
+  /* Dégradé */
+  background: linear-gradient(135deg, #4DA6FF, #A855F7);
+  color: #0f172a;
+  font-size: 20px;
+  font-weight: 800;
+  text-align: center;
+
+  padding: 14px 0;
+
+  border-radius: 14px;  /* même arrondi visuel que Retour */
+
+  box-shadow:
+    0 8px 18px rgba(15, 23, 42, 0.22),
+    0 0 0 1px rgba(255,255,255,0.25) inset;
+}
+
+.question-back {
+  margin-bottom: 12px;
+  font-size: 14px;
+}
