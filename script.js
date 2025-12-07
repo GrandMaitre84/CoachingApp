@@ -2294,3 +2294,9 @@ document.addEventListener("click", (e) => {
     setTimeout(() => tapEl.classList.remove("tapped"), 120);
   }
 });
+
+function forceTapEffect(el) {
+  if (!el) return;
+  el.classList.add("tap-effect");
+  setTimeout(() => el.classList.remove("tap-effect"), 1000); // 1 seconde
+}
