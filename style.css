@@ -1717,3 +1717,19 @@ button.primary:disabled {
   margin-bottom: 12px;
   font-size: 14px;
 }
+
+/* Effet tap global pour tous les boutons / tuiles interactives */
+.tap {
+  transition:
+    transform 0.09s ease-out,
+    box-shadow 0.09s ease-out,
+    opacity 0.09s ease-out;
+}
+
+/* Effet au clic (desktop + certains mobiles) */
+.tap:active,
+.tap.tapped {
+  transform: scale(0.97) translateY(1px);
+  opacity: 0.92;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+}
