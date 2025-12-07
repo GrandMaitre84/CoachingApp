@@ -54,20 +54,13 @@
   </div>
 
 
-
-
   <main>
 
   <!-- Onglet 1 -->
   <section id="tab1" class="tab active">
 
-
-
-
-    <!-- (puis ton contenu d'accueil : bilan du jour, profil, dashboard…) -->
-
-
     <!-- 🟢 Résumé d’hier -->
+    
     <div id="yesterdaySummary" class="yesterday-card home-anim">
 
 
@@ -152,8 +145,18 @@
       </div>
 
 
+      <!-- 🔙 Bouton retour AU-DESSUS du bloc blanc -->
+      <button
+        id="goBackAnswer"
+        class="secondary question-back"
+        onclick="goBackQuestion()"
+        style="display:none; margin:12px auto 14px; width:90%; max-width:360px;">
+        ← Modifier la réponse précédente
+      </button>
+
       <!-- Panneau Q&A (questions quotidiennes) -->
       <div id="qaPanel" class="hidden card question-card">
+
         <div class="question-header">
           <div id="questionStep" class="question-step">Question 1 / 11</div>
           <div id="questionText" class="question-title">Texte de la question</div>
@@ -171,14 +174,15 @@
 
         <div class="question-footer">
           <div class="question-progress-bar">
-            <!-- ⚠️ ID corrigé ici -->
             <div id="questionProgressInner" class="question-progress-inner"></div>
           </div>
           <div id="progress" class="question-progress-text">
             Question 1 sur 11
           </div>
         </div>
+
       </div>
+
 
       <div id="donePanel" class="hidden done-card card">
         <div class="done-emoji">🔥</div>
@@ -274,28 +278,23 @@
                 ← Retour
               </button>
 
-
-              <div class="card">
+              <div class="card card-nutrition">
                 <div class="card-header">
-                  <h2>Programme nutrition</h2>
+                  <h2 class="nutrition-title">Programme nutrition</h2>
                   <span id="nutriMeta" class="chip">—</span>
                 </div>
 
-                <!-- 🆕 Boutons Jour 1 / Jour 2 / ... -->
                 <div id="nutriDays" class="nutri-days"></div>
 
-                <!-- 🆕 Wrapper avec loader + contenu -->
                 <div class="nutri-content-wrap" style="position:relative; min-height:140px;">
-                  <!-- Loader Lottie nutrition -->
                   <div id="nutriLoader" class="chart-lottie-loader">
                     <div id="nutriAnim" class="chart-lottie-player"></div>
                   </div>
-
-                  <!-- Contenu des repas -->
                   <div id="nutriContent"></div>
                 </div>
               </div>
             </section>
+
 
             <!-- 🏋️ Sous-onglet TRAINING -->
             <section id="tab2-training" class="tab hidden">
@@ -311,7 +310,7 @@
 
     <!-- Onglet 2 : menu -->
             <section id="tab2" class="tab">
-              <h2 id="tab2-title" class="section-title">Mon suivi</h2>
+              <h2 id="tab2-title" class="section-title home-anim">Mon suivi</h2>
               <div id="tab2-menu" class="dashboard-grid">
                 <button class="tile"
                   onclick="switchTab('tab2-sleep', document.querySelector('.tab-btn[data-tab=&quot;tab2&quot;]'))">
@@ -341,8 +340,6 @@
                 </button>
               </div>
             </section>
-
-
 
 
             <!-- Sous-page : Graphique Sommeil -->
@@ -494,7 +491,7 @@
       <pre id="pingResult"></pre>
     </section>
 
-    <div id="appVersion" class="app-version">Version : 0.1.2 (05/12/2025)</div>
+    <div id="appVersion" class="app-version">Version : 0.1.3 (07/12/2025)</div>
 
             <!-- Onglet TO DO LIST -->
             <section id="tab2-todo" class="tab">
