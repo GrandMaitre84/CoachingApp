@@ -1718,7 +1718,6 @@ button.primary:disabled {
   font-size: 14px;
 }
 
-/*
 .tap {
   transition:
     transform 0.09s ease-out,
@@ -1732,10 +1731,10 @@ button.primary:disabled {
   opacity: 0.92;
   box-shadow: 0 2px 4px rgba(0,0,0,0.25);
 }
-*/
+
 
 .tap-effect {
-  transform: scale(0.8) !important;
-  opacity: 0.4 !important;
-  transition: transform 1s ease, opacity 1s ease !important;
+  transform: scale(0.9) !important;
+  opacity: 0.7 !important;
+  transition: transform 0.12s ease, opacity 0.12s ease !important;
 }
