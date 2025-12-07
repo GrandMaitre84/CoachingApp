@@ -2270,20 +2270,27 @@ function updateVersionVisibility() {
 
 
 
-// 🔊 CLICK SOUND EFFECT — version filtrée (seulement sur vrais boutons)
+// 🔊 CLICK SOUND + effet visuel "tap"
 document.addEventListener("click", (e) => {
-  // Boutons de la barre du bas (Accueil / Suivi / Paramètres)
+  // Boutons de la barre du bas
   const tabBtn = e.target.closest(".bottom-nav .tab-btn");
 
-  // Gros boutons de l’app (Bilan du jour, Training, Nutrition, Valider, tuiles Suivi, etc.)
+  // Gros boutons / tuiles / retour / primary / secondary
   const mainBtn = e.target.closest(
     "button, .primary, .secondary, #tab2-menu button.tile"
   );
 
+  // 🎵 Son
   if (tabBtn) {
     playSfx("clickTab");
   } else if (mainBtn) {
     playSfx("click");
   }
-  // Sinon : pas de son (clic dans un input, texte, scroll, etc.)
+
+  // ✨ Effet "tap" visuel (sur les éléments qui ont la classe .tap)
+  const tapEl = e.target.closest(".tap");
+  if (tapEl) {
+    tapEl.classList.add("tapped");
+    setTimeout(() => tapEl.classList.remove("tapped"), 120);
+  }
 });
