@@ -2301,13 +2301,11 @@ function forceTapEffect(el) {
   setTimeout(() => el.classList.remove("tap-effect"), 1000); // 1 seconde
 }
 
-function openSleepTile(btn) {
-  // 1) Lance l'effet visuel
-  forceTapEffect(btn);
+function openSleepTile(el) {
+  if (el) forceTapEffect(el); // Effet immédiat au tap
 
-  // 2) Attends un peu, puis change d'onglet
-  setTimeout(() => {
-    const navBtn = document.querySelector('.tab-btn[data-tab="tab2"]');
-    switchTab('tab2-sleep', navBtn);
-  }, 300); // 150 ms = assez long pour voir l'effet sur tel
+  // Changer de page instantanément
+  const navBtn = document.querySelector('.tab-btn[data-tab="tab2"]');
+  switchTab('tab2-sleep', navBtn);
 }
+
