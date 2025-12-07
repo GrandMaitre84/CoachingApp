@@ -2300,3 +2300,14 @@ function forceTapEffect(el) {
   el.classList.add("tap-effect");
   setTimeout(() => el.classList.remove("tap-effect"), 1000); // 1 seconde
 }
+
+function openSleepTile(btn) {
+  // 1) Lance l'effet visuel
+  forceTapEffect(btn);
+
+  // 2) Attends un peu, puis change d'onglet
+  setTimeout(() => {
+    const navBtn = document.querySelector('.tab-btn[data-tab="tab2"]');
+    switchTab('tab2-sleep', navBtn);
+  }, 300); // 150 ms = assez long pour voir l'effet sur tel
+}
