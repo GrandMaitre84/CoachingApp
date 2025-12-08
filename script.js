@@ -435,12 +435,15 @@ function backToHome() {
   // Réaffiche le panneau BILAN
   document.getElementById('bilanPanel')?.classList.remove('hidden');
 
-  // Cache le panneau "commencer"
+  // Cache tous les panneaux du flow bilan
   document.getElementById('startPanel')?.classList.add('hidden');
+  document.getElementById('qaPanel')?.classList.add('hidden');
+  document.getElementById('donePanel')?.classList.add('hidden');
 
-  // 👇 NEW : on ré-affiche la carte Résumé d’hier
+  // On ré-affiche la carte "Résumé d’hier"
   document.getElementById('yesterdaySummary')?.classList.remove('hidden');
 }
+
 
 
 function openProfile() {
