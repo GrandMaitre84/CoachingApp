@@ -1059,10 +1059,17 @@ function animatePanel(id) {
   const el = document.getElementById(id);
   if (!el) return;
 
-  el.classList.remove('panel-anim');
-  void el.offsetWidth; // force reflow pour rejouer l'anim
-  el.classList.add('panel-anim');
+  // Si le panneau contient une "carte" principale, on anime celle-là
+  const mainCard =
+    el.querySelector('.card') ||
+    el.querySelector('.panel') ||
+    el; // fallback
+
+  mainCard.classList.remove('panel-anim');
+  void mainCard.offsetWidth; // force reflow
+  mainCard.classList.add('panel-anim');
 }
+
 
 function submitClientLogin() {
   const input = document.getElementById('loginInput');
