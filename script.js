@@ -2098,8 +2098,8 @@ async function loadNutrition(sheetName){
     }
 
     box.innerHTML = html;
-    // 🎬 Animation quand le programme nutrition est prêt
-    animatePanel('tab2-nutrition');
+    // 🎬 Animation sur le contenu uniquement
+    animatePanel('nutriContent');
     nutrLoaded = true;
 
   } catch(err){
