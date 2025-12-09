@@ -1748,3 +1748,7 @@ button.primary:disabled {
   font-size: 14px !important;      /* texte plus compact */
 }
 
+/* Début du coaching = pleine largeur */
+.profile-full {
+  grid-column: 1 / -1 !important;
+}
