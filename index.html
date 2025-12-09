@@ -200,74 +200,71 @@
 
 
 
-      <!-- Panneau PROFIL (caché au départ) -->
-      <div id="profilePanel" class="hidden">
-        <button class="secondary" onclick="closeProfile()">← Retour</button>
+     <!-- Panneau PROFIL (caché au départ) -->
+     <div id="profilePanel" class="hidden">
+       <button class="secondary" onclick="closeProfile()">← Retour</button>
 
-        <div class="card profile-card">
-          <h2 class="profile-title">Mon profil</h2>
+       <div class="card profile-card">
+         <h2 class="profile-title">Mon profil</h2>
 
-          <div class="profile-name-row">
-            <span id="profileNameBadge" class="chip">—</span>
-          </div>
+         <div class="profile-name-row">
+           <span id="profileNameBadge" class="chip">—</span>
+         </div>
 
-          <div class="profile-grid">
-            <div class="profile-item">
-              <div class="profile-label">Âge</div>
-              <div id="profileAge" class="profile-value">—</div>
-            </div>
+         <!-- 🧩 GRILLE PRINCIPALE DU PROFIL -->
+         <div class="profile-grid">
+           <!-- Début du coaching : pleine largeur -->
+           <div class="profile-item profile-full">
+             <div class="profile-label">Début du coaching</div>
+             <div id="profileStartDate" class="profile-value">—</div>
+           </div>
 
-            <div class="profile-item">
-              <div class="profile-label">Début du coaching</div>
-              <div id="profileStartDate" class="profile-value">—</div>
-            </div>
+           <!-- Score santé -->
+           <div class="profile-item">
+             <div class="profile-label">Score santé</div>
+             <div id="profileHealthScore" class="profile-value">—</div>
+           </div>
 
-            <div class="profile-item">
-              <div class="profile-label">Score santé</div>
-              <div id="profileHealthScore" class="profile-value">—</div>
-            </div>
-            <!-- Panneau TO DO LIST (caché au départ) -->
-            <div id="todoPanel" class="hidden">
-              <button class="secondary" onclick="closeTodo()">← Retour</button>
+           <!-- Points santé -->
+           <div class="profile-item">
+             <div class="profile-label">Points santé</div>
+             <div id="profileHealthPoints" class="profile-value">— / 100</div>
+           </div>
+         </div>
 
-              <div class="card">
-                <h2 class="profile-title">To Do List</h2>
-                <p class="note">
-                  Espace TODO à configurer (tâches, cases à cocher, etc.).
-                </p>
-              </div>
-            </div>
+         <!-- ✅ Barre de points santé sous les blocs -->
+         <div class="profile-health-bar-wrap">
+           <div class="health-bar-container">
+             <div id="healthBar" class="health-bar"></div>
+           </div>
+         </div>
 
+         <!-- Steps + Distance côte à côte -->
+         <div class="profile-row">
+           <div class="profile-item half">
+             <div class="profile-label">Steps</div>
+             <div id="profileStepsTotal" class="profile-value small">—</div>
+           </div>
 
-            <!-- ⚠️ Bloc Points santé RESTE dans la grille -->
-            <div class="profile-item">
-              <div class="profile-label">Points santé</div>
-              <div id="profileHealthPoints" class="profile-value">— / 100</div>
-            </div>
-          </div>
+           <div class="profile-item half">
+             <div class="profile-label">Distance</div>
+             <div id="profileDistanceKm" class="profile-value small">—</div>
+           </div>
+         </div>
+       </div>
 
+       <!-- Panneau TO DO LIST (séparé du profil) -->
+       <div id="todoPanel" class="hidden">
+         <button class="secondary" onclick="closeTodo()">← Retour</button>
+         <div class="card">
+           <h2 class="profile-title">To Do List</h2>
+           <p class="note">
+             Espace TODO à configurer (tâches, cases à cocher, etc.).
+           </p>
+         </div>
+       </div>
+     </div>
 
-          <!-- ✅ Barre de points santé sous les blocs, centrée -->
-          <div class="profile-health-bar-wrap">
-            <div class="health-bar-container">
-              <div id="healthBar" class="health-bar"></div>
-            </div>
-          </div>
-
-          <!-- Ligne avec Steps + Distance -->
-          <!-- Bloc "steps + distance" côte à côte -->
-          <div class="profile-row">
-            <div class="profile-item half">
-              <div class="profile-label">Steps</div>
-              <div id="profileStepsTotal" class="profile-value small">—</div>
-            </div>
-
-            <div class="profile-item half">
-              <div class="profile-label">Distance</div>
-              <div id="profileDistanceKm" class="profile-value small">—</div>
-            </div>
-
-          </section>
 
 
       </section>
