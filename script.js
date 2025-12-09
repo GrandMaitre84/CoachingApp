@@ -402,9 +402,10 @@ function buildInput(q){
 
 function openDailyCheckin() {
   const stored = localStorage.getItem('bilan_done');
+  const today  = todayFR(); // ←✔️ OBLIGATOIRE
 
   // 🔒 1) Vérifier si le bilan a déjà été fait aujourd’hui
-  if (stored && isToday(stored)) {
+  if (stored === today) {
     alert("Le bilan du jour a déjà été complété.");
 
     const btn = document.getElementById('bilanBtn');
@@ -425,6 +426,7 @@ function openDailyCheckin() {
   // 👇 On masque aussi le dashboard d’hier pendant le bilan
   document.getElementById('yesterdaySummary')?.classList.add('hidden');
 }
+
 
 
 
