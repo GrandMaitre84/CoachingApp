@@ -429,10 +429,6 @@ function openDailyCheckin() {
 
 
 
-
-
-
-
 function backToHome() {
   // Réaffiche le panneau BILAN
   document.getElementById('bilanPanel')?.classList.remove('hidden');
@@ -442,9 +438,14 @@ function backToHome() {
   document.getElementById('qaPanel')?.classList.add('hidden');
   document.getElementById('donePanel')?.classList.add('hidden');
 
+  // 🔙 On cache aussi le bouton "modifier la réponse précédente"
+  const backBtn = document.getElementById('goBackAnswer');
+  if (backBtn) backBtn.style.display = 'none';
+
   // On ré-affiche la carte "Résumé d’hier"
   document.getElementById('yesterdaySummary')?.classList.remove('hidden');
 }
+
 
 
 
@@ -824,6 +825,10 @@ function finishAndSend() {
   const btn = document.getElementById('submitAnswer');
   if (btn) btn.style.display = 'none';
 
+  // 🔙 NEW : cacher le bouton "modifier la réponse précédente"
+  const backBtn = document.getElementById('goBackAnswer');
+  if (backBtn) backBtn.style.display = 'none';
+
   // 2) Envoi des réponses au Google Sheet
   const bulk = Object.keys(state.answers).map(col => ({ col, value: state.answers[col] }));
   sendBulk({ date: state.date, sheet: SHEET_TAB, bulk }, err => {
@@ -841,6 +846,7 @@ function finishAndSend() {
     bilanBtn.classList.add('disabled'); // tu as déjà le CSS pour ça
   }
 }
+
 
  function goBackQuestion() {
    // On ne peut pas remonter avant la première question
