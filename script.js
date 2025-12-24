@@ -22,6 +22,8 @@ const SFX_FILES = {
 
 const sfxBuffers = {};
 
+const workoutCache = {};
+
 // Charge un son en mémoire
 async function loadSfx(name, url) {
   try {
@@ -283,7 +285,6 @@ async function loadProfileHealthPoints(scoreEl, ptsTextEl, barEl) {
       return;
     }
 
-    // Pour debug : détail des sources
     console.log(
       'HP calculés => base =', json.basePoints,
       'todoBonus =', json.todoBonus,
@@ -296,30 +297,88 @@ async function loadProfileHealthPoints(scoreEl, ptsTextEl, barEl) {
     // 🎯 Points santé = reste (0–99)
     const remainder = totalNum % 100;
 
+    // 🔁 Fallback DOM si les éléments ne sont pas passés en paramètre
+    if (!scoreEl) {
+      scoreEl =
+        document.getElementById('profileHealthScore') ||
+        document.getElementById('profileScore');
+    }
+
+    if (!ptsTextEl) {
+      ptsTextEl =
+        document.getElementById('healthBarText') ||   // texte dans la barre
+        document.getElementById('profileHealthPoints') ||
+        document.getElementById('profilePoints');
+    }
+
+    if (!barEl) {
+      barEl = document.getElementById('healthBar');
+    }
+
+    // ✅ Met à jour le score santé (niveau)
     if (scoreEl) {
       scoreEl.textContent = String(level);
     }
 
+    // ✅ Met à jour le texte des points santé (ex : "34 / 100")
     if (ptsTextEl) {
       ptsTextEl.textContent = `${remainder} / 100`;
     }
 
+    // ✅ Met à jour la barre au chargement
     if (barEl) {
-      const pct = Math.max(0, Math.min(100, remainder));
+      const pct = Math.max(0, Math.min(100, remainder)); // clamp 0–100
       barEl.style.width = pct + '%';
     }
 
   } catch (err) {
     console.error('loadProfileHealthPoints error:', err);
-    // On laisse les anciennes valeurs si erreur
+    // on laisse les anciennes valeurs si erreur
   }
 }
 
 
+async function loadProfileCurrentWeek() {
+  try {
+    const clientId = (window.__CLIENT_ID__ || '').trim();
 
+    let url = GAS_URL + '?action=current_week';
+    if (clientId) url += '&id=' + encodeURIComponent(clientId);
 
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
 
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error || 'Réponse Apps Script invalide');
 
+    const weekEl  = document.getElementById('profileWeek') || document.getElementById('profileWeekValue');
+    const phaseEl = document.getElementById('profilePhase') || document.getElementById('profilePhaseValue');
+
+    if (!json.exists) {
+      if (weekEl)  weekEl.textContent  = '—';
+      if (phaseEl) phaseEl.textContent = '—';
+      return;
+    }
+
+    const weekNum = Number(json.week || 0);
+
+    if (weekEl) {
+      weekEl.textContent = weekNum ? String(weekNum) : '—';
+    }
+
+    if (phaseEl) {
+      const p = (json.phase ?? '').toString().trim();
+      phaseEl.textContent = p === '' ? '—' : p;
+    }
+
+  } catch (err) {
+    console.error('loadProfileCurrentWeek error:', err);
+    const weekEl  = document.getElementById('profileWeek') || document.getElementById('profileWeekValue');
+    const phaseEl = document.getElementById('profilePhase') || document.getElementById('profilePhaseValue');
+    if (weekEl)  weekEl.textContent  = '—';
+    if (phaseEl) phaseEl.textContent = '—';
+  }
+}
 
 
 
@@ -466,6 +525,7 @@ function openProfile() {
   // On recharge les données
   loadProfileData();
   loadProfileStepsTotal();
+loadProfileCurrentWeek();
 }
 
 
@@ -521,8 +581,16 @@ function addTodo() {
 }
 
 
-function openTrainingPage() {
-  switchTab('tab2-training');
+function openTrainingPage(sessionNum) {
+  const suiviBtn = document.querySelector('.tab-btn[data-tab="tab2"]');
+  switchTab('tab2-training', suiviBtn);
+
+  // On fixe le titre de la séance tout de suite
+  const titleEl = document.getElementById('training-session-title');
+  if (titleEl) titleEl.textContent = "Séance " + sessionNum;
+
+  // On lance le chargement
+  loadWorkout(sessionNum);
 }
 
 function backFromTraining() {
@@ -651,9 +719,13 @@ if (todoWrap) {
     const item = cb.closest('.todo-item');
     if (!item) return;
 
-    // 🔹 1) Mise à jour instantanée de l’UI (ex- logique completeTodo)
-    const ptsEl = document.getElementById("profileHealthPoints");
+    // 🔹 1) Mise à jour instantanée de l’UI (ex-logique completeTodo)
+    const ptsEl =
+      document.getElementById("healthBarText") ||   // nouveau texte dans la barre
+      document.getElementById("profileHealthPoints"); // fallback ancien id
+
     const barEl = document.getElementById("healthBar");
+
     if (ptsEl) {
       let current = Number(ptsEl.textContent.split("/")[0]) || 0;
       current += TODO_POINTS_PER_TASK;
@@ -667,11 +739,16 @@ if (todoWrap) {
         }
       }
 
+      // texte "xx / 100" dans la barre
       ptsEl.textContent = `${current} / 100`;
+
+      // largeur de la barre en fonction des points
       if (barEl) {
-        barEl.style.width = current + "%";
+        const pct = Math.max(0, Math.min(100, current));
+        barEl.style.width = pct + "%";
       }
     }
+
 
     // 🔹 2) Animation Lottie immédiate
     playTodoAnimation();
@@ -930,6 +1007,53 @@ function sendBulk(payload, cb){
   };
   xhr.send(params);
 }
+
+// ───────── WORKOUT : envoi buffer (appel réseau uniquement à la fin) ─────────
+function sendWorkoutBuffer(buffer, cb) {
+  try {
+    const clientId = (window.__CLIENT_ID__ || '').trim();
+
+    // ✅ Payload compact et clair
+    const payload = {
+      session: buffer.sessionNum,
+      date: buffer.date,
+      exercises: buffer.exercises
+    };
+
+    // 🔎 DEBUG — VOIR EXACTEMENT CE QUI EST ENVOYÉ
+    console.log("PAYLOAD_WORKOUT =", JSON.stringify(payload, null, 2));
+
+    const params =
+      'action=' + encodeURIComponent('workout_save') +
+      '&payload=' + encodeURIComponent(JSON.stringify(payload)) +
+      (clientId ? '&id=' + encodeURIComponent(clientId) : '');
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', GAS_URL, true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;charset=UTF-8');
+
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState !== 4) return;
+
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const d = JSON.parse(xhr.responseText);
+          if (d && d.ok) return cb(null, d);
+          return cb(d.error || 'Réponse Apps Script invalide');
+        } catch (e) {
+          return cb('JSON parse error: ' + e.message);
+        }
+      }
+
+      return cb('HTTP ' + xhr.status + ' — ' + (xhr.responseText || ''));
+    };
+
+    xhr.send(params);
+  } catch (e) {
+    return cb(String(e && e.message ? e.message : e));
+  }
+}
+
 
 
 // ---------- ping ----------
@@ -2141,7 +2265,7 @@ async function loadNutrition(sheetName){
     // logique de base
     baseSwitch(targetId, btn);
 
-    // ⚡ animation douce sur le panneau ouvert (tab2, tab2-sleep, tab2-weight, etc.)
+    // ⚡ animation douce sur le panneau ouvert
     animatePanel(targetId);
 
     // lazy-load des graphes
@@ -2149,8 +2273,25 @@ async function loadNutrition(sheetName){
     if (targetId === 'tab2-sleep')  loadSleepChart();
     if (targetId === 'tab2-steps')  loadStepsChart();
     if (targetId === 'tab2-energy') loadEnergyChart();
+
+    // ✅ Comportement "Home" complet quand on clique sur Accueil
+    if (targetId === 'tab1') {
+      // remettre l'accueil propre
+      document.getElementById('bilanPanel')?.classList.remove('hidden');
+      document.getElementById('startPanel')?.classList.add('hidden');
+      document.getElementById('qaPanel')?.classList.add('hidden');
+      document.getElementById('donePanel')?.classList.add('hidden');
+      document.getElementById('profilePanel')?.classList.add('hidden');
+      document.getElementById('yesterdaySummary')?.classList.remove('hidden');
+
+      // mettre à jour l’affichage de la version si tu l’utilises
+      if (typeof updateVersionVisibility === 'function') {
+        updateVersionVisibility();
+      }
+    }
   };
 })();
+
 
 
 
@@ -2174,12 +2315,20 @@ function goToTab(n) {
 
     // ✅ On ré-affiche le dashboard "Résumé d’hier"
     document.getElementById('yesterdaySummary')?.classList.remove('hidden');
+
+    // ✅ RESET Programme test (évite de retomber sur la séance précédente)
+    document.getElementById('workoutTestPanel')?.classList.add('hidden');
+    document.getElementById('tab2-training')?.classList.remove('hidden');
+    document.getElementById('workoutSessionView')?.classList.add('hidden');
+    document.getElementById('workoutSessionsGrid')?.classList.remove('hidden');
   }
+
   // 🔄 MAJ de l’affichage de la version
   updateVersionVisibility();
 }
 
 window.goToTab = goToTab;
+
 
 
 // 🔹 Ouvrir la page Nutrition depuis l'accueil (tab1)
@@ -2325,3 +2474,648 @@ function openSleepTile(el) {
     animatePanel('tab2-sleep');
   }, 0);
 }
+
+function openWorkoutTest() {
+  document.getElementById('tab2-training')?.classList.add('hidden');
+
+  // ✅ Reset UI Programme test : toujours repartir de la liste
+  document.getElementById('workoutSessionView')?.classList.add('hidden');
+  document.getElementById('workoutSessionsGrid')?.classList.remove('hidden');
+
+  const panel = document.getElementById('workoutTestPanel');
+  panel?.classList.remove('hidden');
+
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  animatePanel('workoutTestPanel');
+  loadWorkoutSessions();
+}
+
+function closeWorkoutTest() {
+  document.getElementById('workoutTestPanel')?.classList.add('hidden');
+  document.getElementById('tab2-training')?.classList.remove('hidden');
+}
+
+async function loadWorkoutSessions() {
+  const grid = document.getElementById('workoutSessionsGrid');
+  if (!grid) return;
+
+  if (typeof GAS_URL === 'undefined' || !GAS_URL) {
+    grid.innerHTML = 'Erreur: GAS_URL non défini';
+    return;
+  }
+
+  grid.innerHTML = '⏳ Chargement…';
+
+  try {
+    const clientId = (window.__CLIENT_ID__ || '').trim();
+
+    // 1) Récupérer la liste des séances
+    let url = GAS_URL + '?action=workout_sessions';
+    if (clientId) url += '&id=' + encodeURIComponent(clientId);
+
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    const json = await res.json();
+    if (!json.ok || !json.exists) {
+      grid.innerHTML = 'Aucune séance trouvée';
+      return;
+    }
+
+    // 2) Récupérer la semaine en cours
+    let weekNum = Number(json.week || 0);
+    if (!weekNum) {
+      let wurl = GAS_URL + '?action=current_week';
+      if (clientId) wurl += '&id=' + encodeURIComponent(clientId);
+
+      const wres = await fetch(wurl);
+      if (wres.ok) {
+        const wjson = await wres.json();
+        if (wjson && wjson.ok && wjson.exists) {
+          weekNum = Number(wjson.week || 0);
+        }
+      }
+    }
+
+    grid.innerHTML = '';
+
+    json.sessions.forEach(s => {
+      const btn = document.createElement('button');
+      btn.className = 'workout-session-btn';
+      btn.type = 'button';
+      btn.textContent = s.label;
+
+      const clientKey = ((window.__CLIENT_ID__ || '').trim() || 'default').toLowerCase();
+      const lockKey = `workout:lock:${clientKey}:w${weekNum}:s${s.num}`;
+      const isLocked = localStorage.getItem(lockKey) === '1';
+
+      if (isLocked) {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.filter = 'grayscale(0.6)';
+        btn.style.cursor = 'not-allowed';
+      } else {
+        // CORRECTION ICI : on passe l'événement 'e' pour bloquer le comportement par défaut
+        btn.onclick = (e) => {
+          if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+          openWorkoutSession(s.num, s.label);
+        };
+      }
+
+      grid.appendChild(btn);
+    });
+
+  } catch (e) {
+    console.error(e);
+    grid.innerHTML = 'Erreur de chargement';
+  }
+}
+
+
+window.openWorkoutTest = openWorkoutTest;
+window.closeWorkoutTest = closeWorkoutTest;
+window.loadWorkoutSessions = loadWorkoutSessions;
+
+// 🧠 Buffer local de séance (aucun envoi réseau pendant la saisie)
+let workoutBuffer = {
+  sessionNum: null,
+  date: null,
+  exercises: [] // [{ name, sets: [{ set, weight, reps, note }] }]
+};
+
+async function openWorkoutSession(sessionNum, label) {
+  // 1. UI: on cache la grille, on affiche le détail
+  document.getElementById('workoutSessionsGrid')?.classList.add('hidden');
+  document.getElementById('workoutSessionView')?.classList.remove('hidden');
+  
+
+  const titleEl = document.getElementById('workoutSessionTitle');
+  const metaEl = document.getElementById('workoutSessionMeta');
+  const content = document.getElementById('workoutSessionContent');
+  const loadingContainer = document.getElementById('loadingAnim');
+
+  // ❌ cacher définitivement le badge "Semaine X"
+  const weekBadge = document.getElementById('workoutWeekTitle');
+  if (weekBadge) weekBadge.style.display = 'none';
+
+  // ✅ Style du Titre (Harmonisé Nutrition)
+  if (titleEl) {
+    titleEl.textContent = 'Séance ' + sessionNum;
+    const exactHeight = '52px';
+    titleEl.style.setProperty('display', 'flex', 'important');
+    titleEl.style.setProperty('align-items', 'center', 'important');
+    titleEl.style.setProperty('justify-content', 'center', 'important');
+    titleEl.style.setProperty('width', '100%', 'important');
+    titleEl.style.setProperty('height', exactHeight, 'important');
+    titleEl.style.setProperty('margin', '0', 'important');  
+    titleEl.style.setProperty('margin-top', '0px', 'important');  
+    titleEl.style.setProperty('margin-bottom', '12px', 'important');
+    titleEl.style.setProperty('background', 'linear-gradient(135deg, #80f9ff 0%, #81fbb8 100%)', 'important');
+    titleEl.style.setProperty('color', '#0b2027', 'important');  
+    titleEl.style.setProperty('font-weight', '800', 'important');
+    titleEl.style.setProperty('font-size', '22px', 'important');
+    titleEl.style.setProperty('border-radius', '15px', 'important');
+    titleEl.style.setProperty('box-shadow', '0 4px 12px rgba(0,0,0,0.08)', 'important');
+    titleEl.classList.add('panel-anim');
+    // On cible le bouton qui a la classe "back" à l'intérieur de l'onglet du programme
+    const btnRetour = document.querySelector('#tab2-workout-test .back');
+
+    if (btnRetour) {
+        // On enlève et on remet la classe avec un mini délai pour forcer l'animation
+        btnRetour.classList.remove('panel-anim');
+        setTimeout(() => {
+            btnRetour.classList.add('panel-anim');
+        }, 10);
+    }
+  }
+
+  // 2. Lancement de l'Animation
+  if (metaEl) metaEl.textContent = '⏳ Chargement…';
+  if (content) content.innerHTML = ''; // On vide pour laisser place à l'animation
+
+  if (loadingContainer) {
+    loadingContainer.style.display = 'flex';
+    loadingContainer.innerHTML = ''; 
+    if (typeof lottie !== 'undefined') {
+      lottie.loadAnimation({
+        container: loadingContainer,
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        path: 'animations/loading.json'
+      });
+    }
+  }
+
+  // ✅ Reset du buffer
+  workoutBuffer = {
+    sessionNum: sessionNum,
+    date: todayFR(),
+    exercises: []
+  };
+
+  // ⬇️ AJOUT DU CACHE ICI ⬇️
+  if (workoutCache[sessionNum]) {
+    console.log("Chargement depuis le cache...");
+    if (loadingContainer) loadingContainer.style.display = 'none';
+    renderWorkoutContent(workoutCache[sessionNum], content, metaEl, sessionNum);
+    return; // On arrête la fonction ici, pas de fetch !
+  }
+  // ⬆️ FIN DU BLOC CACHE ⬆️
+  
+  try {
+    const clientId = (window.__CLIENT_ID__ || '').trim();
+    let url = GAS_URL + '?action=workout_get&session=' + encodeURIComponent(sessionNum);
+    if (clientId) url += '&id=' + encodeURIComponent(clientId);
+
+    const res = await fetch(url);
+
+    // 3. Arrêt de l'animation dès que le fetch répond
+    if (loadingContainer) {
+        loadingContainer.style.display = 'none';
+        loadingContainer.innerHTML = ''; 
+    }
+
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+
+    if (!json.ok || !json.exists) {
+      if (metaEl) metaEl.textContent = 'Aucune donnée';
+      if (content) content.innerHTML = '<div class="note">Séance introuvable.</div>';
+      return;
+    }
+
+    if (metaEl) {
+      metaEl.style.display = '';
+      metaEl.textContent = 'Séance ' + sessionNum;
+    }
+
+    // --- IMPORTANT : ICI ON NE FAIT PLUS "content.innerHTML = ''" ---
+    // On commence directement le rendu des exercices ci-dessous
+
+    // 🔒 État de verrouillage
+    const clientKey = ((window.__CLIENT_ID__ || '').trim() || 'default').toLowerCase();
+    const weekNum = Number(json.week || 0);
+    const lockKey = `workout:lock:${clientKey}:w${weekNum}:s${sessionNum}`;
+    const isLocked = localStorage.getItem(lockKey) === '1';
+
+    // (La suite de ta boucle forEach continue ici...)
+
+   
+
+    console.log('workoutBuffer ready =', workoutBuffer);
+
+    (json.data || []).forEach(exo => {
+      if (!exo || !exo.name) return;
+
+      // ✅ créer l'exercice dans le buffer (index correct)
+      workoutBuffer.exercises.push({ name: exo.name, sets: [] });
+      const exerciseIndex = workoutBuffer.exercises.length - 1;
+
+      const block = document.createElement('div');
+
+      // 1. On applique les classes (card pour le style, panel-anim pour l'apparition)
+      block.className = 'card panel-anim';
+
+      // 2. Sécurité pour le délai : si 'idx' n'existe pas, on met 0
+      const delay = (typeof idx !== 'undefined') ? (idx * 0.05) : 0;
+      block.style.animationDelay = delay + 's';
+
+      // 3. Tes styles de positionnement
+      block.style.marginTop = '12px';
+      block.style.display = 'block'; // Force l'affichage au cas où
+      
+
+      // ✅ titre exercice
+      const title = document.createElement('div');
+      title.className = 'workout-exo-title';
+      title.textContent = exo.name;
+      block.appendChild(title);
+
+      // ✅ En-tête colonnes (kg / reps / note) — visuel uniquement
+      const header = document.createElement('div');
+      header.style.display = 'grid';
+      header.style.gridTemplateColumns = '1fr 80px 80px 34px';
+      header.style.gap = '10px';
+      header.style.alignItems = 'center';
+      header.style.padding = '8px 0';
+      header.style.opacity = '0.55';
+      header.style.fontSize = '12px';
+
+      const hLeft = document.createElement('div'); // colonne 1 (vide)
+      hLeft.textContent = '';
+
+      const hKg = document.createElement('div');
+      hKg.textContent = 'kg';
+      hKg.style.textAlign = 'center';
+      hKg.style.fontWeight = '700';
+
+      const hReps = document.createElement('div');
+      hReps.textContent = 'reps';
+      hReps.style.textAlign = 'center';
+      hReps.style.fontWeight = '700';
+
+      const hNote = document.createElement('div');
+      hNote.textContent = 'note';
+      hNote.style.textAlign = 'center';
+      hNote.style.fontWeight = '700';
+
+      header.appendChild(hLeft);
+      header.appendChild(hKg);
+      header.appendChild(hReps);
+      header.appendChild(hNote);
+
+      block.appendChild(header);
+
+      
+      const sets = (exo.sets || []);
+      if (!sets.length) {
+        const empty = document.createElement('div');
+        empty.className = 'note';
+        empty.textContent = 'Aucune série détectée.';
+        block.appendChild(empty);
+      } else {
+        sets.forEach((s, idx) => {
+
+          // 🔑 clé unique (DOIT être définie AVANT utilisation)
+          const clientKey = ((window.__CLIENT_ID__ || '').trim() || 'default').toLowerCase();
+          const exoKey = String(exo.name || '').trim();
+          const key = `note:${clientKey}:s${sessionNum}:${exoKey}:set${idx+1}`;
+
+          // ✅ créer la série dans le buffer (valeurs vides par défaut)
+          workoutBuffer.exercises[exerciseIndex].sets.push({
+            set: idx + 1,
+
+            // ✅ indispensables pour écrire dans le bon endroit du sheet
+            row: s.row,
+            write: s.write, // { weightCol, repsCol, noteCol }
+
+            // ✅ valeurs saisies
+            weight: '',
+            reps: '',
+            note: ''
+          });
+
+
+
+
+          const row = document.createElement('div');
+          row.style.display = 'grid';
+          row.style.gridTemplateColumns = '1fr 80px 80px 34px';
+          row.style.gap = '10px';
+          row.style.alignItems = 'center';
+          row.style.padding = '10px 0';
+          row.style.borderTop = '1px solid rgba(0,0,0,0.06)';
+
+          // ✅ COL 1 : S1 + cible
+          const left = document.createElement('div');
+          left.style.display = 'flex';
+          left.style.gap = '10px';
+          left.style.alignItems = 'center';
+
+          const setLabel = document.createElement('div');
+          setLabel.style.fontWeight = '800';
+          setLabel.style.minWidth = '42px';
+          setLabel.textContent = 'S' + (idx + 1);
+
+          const target = document.createElement('div');
+          target.style.fontWeight = '600';
+          target.style.opacity = '0.95';
+          target.style.whiteSpace = 'nowrap';
+          target.textContent = (s.target || '—');
+
+          left.appendChild(setLabel);
+          left.appendChild(target);
+
+          // ✅ COL 2 : poids (input)
+          const poids = document.createElement('input');
+          poids.addEventListener('input', () => {
+            workoutBuffer.exercises[exerciseIndex].sets[idx].weight = poids.value;
+          });
+          poids.type = 'number';
+          poids.inputMode = 'decimal';
+          poids.placeholder = 'kg';
+          poids.step = '0.5';              // tu changeras si besoin
+          poids.style.width = '100%';
+          poids.style.textAlign = 'center';
+          poids.style.padding = '8px 6px';
+          poids.style.borderRadius = '10px';
+          poids.style.border = '1px solid rgba(0,0,0,0.12)';
+          poids.style.background = 'rgba(255,255,255,0.9)';
+          poids.style.boxSizing = 'border-box';
+
+
+          // ✅ COL 3 : reps (input)
+          const reps = document.createElement('input');
+          reps.addEventListener('input', () => {
+            workoutBuffer.exercises[exerciseIndex].sets[idx].reps = reps.value;
+          });
+          reps.type = 'number';
+          reps.inputMode = 'numeric';
+          reps.placeholder = 'reps';
+          reps.step = '1';
+          reps.min = '0';
+          reps.style.width = '100%';
+          reps.style.textAlign = 'center';
+          reps.style.padding = '8px 6px';
+          reps.style.borderRadius = '10px';
+          reps.style.border = '1px solid rgba(0,0,0,0.12)';
+          reps.style.background = 'rgba(255,255,255,0.9)';
+          reps.style.boxSizing = 'border-box';
+
+
+        
+          // ✅ COL 4 : note (cliquable)
+          const note = document.createElement('button');
+          note.type = 'button';
+          note.textContent = '📝';
+          note.style.textAlign = 'center';
+          note.style.opacity = '0.85';
+          note.style.background = 'transparent';
+          note.style.border = 'none';
+          note.style.cursor = 'pointer';
+          note.style.fontSize = '18px';
+          note.style.padding = '6px';
+
+        
+
+          // 🔽 bloc note (caché par défaut)
+          const noteRow = document.createElement('div');
+          noteRow.style.display = 'none';
+          noteRow.style.gridColumn = '1 / -1'; // prend toute la largeur de la grille
+          noteRow.style.padding = '10px';
+
+
+          noteRow.style.marginTop = '6px';
+          noteRow.style.background = 'rgba(0,0,0,0.03)';
+          noteRow.style.borderTop = '1px dashed rgba(0,0,0,0.15)';
+          noteRow.style.borderRadius = '8px';
+
+          const textarea = document.createElement('textarea');
+          textarea.placeholder = 'Note...';
+          textarea.rows = 2;
+          textarea.style.width = '100%';
+          textarea.style.boxSizing = 'border-box';
+          textarea.style.resize = 'none';
+
+          // ✅ Sync live : la note partira même si on ne clique pas sur OK
+          textarea.addEventListener('input', () => {
+            workoutBuffer.exercises[exerciseIndex].sets[idx].note = textarea.value || '';
+          });
+
+          // charger note existante si dispo
+          const existing = localStorage.getItem(key);
+          if (existing) textarea.value = existing;
+          // ✅ si une note existe déjà, on la met aussi dans le buffer
+          if (existing) {
+            workoutBuffer.exercises[exerciseIndex].sets[idx].note = existing;
+          }
+
+          // actions
+          const actions = document.createElement('div');
+          actions.style.display = 'flex';
+          actions.style.justifyContent = 'flex-end';
+          actions.style.gap = '8px';
+          actions.style.marginTop = '6px';
+
+          const btnCancel = document.createElement('button');
+          btnCancel.type = 'button';
+          btnCancel.textContent = '✕';
+          btnCancel.style.border = 'none';
+          btnCancel.style.background = 'transparent';
+          btnCancel.style.cursor = 'pointer';
+          btnCancel.style.fontSize = '16px';
+
+          const btnOk = document.createElement('button');
+          btnOk.type = 'button';
+          btnOk.textContent = 'OK';
+          btnOk.style.padding = '6px 10px';
+          btnOk.style.borderRadius = '8px';
+          btnOk.style.border = '1px solid rgba(0,0,0,0.15)';
+          btnOk.style.background = 'white';
+          btnOk.style.cursor = 'pointer';
+
+          actions.appendChild(btnCancel);
+          actions.appendChild(btnOk);
+
+          noteRow.appendChild(textarea);
+          noteRow.appendChild(actions);
+
+          // toggle + save
+          note.addEventListener('click', () => {
+            const open = noteRow.style.display !== 'none';
+            noteRow.style.display = open ? 'none' : 'block';
+            if (!open) textarea.focus();
+          });
+
+          btnCancel.addEventListener('click', () => {
+            noteRow.style.display = 'none';
+          });
+
+          btnOk.addEventListener('click', () => {
+            const val = (textarea.value || '');
+
+
+            if (val) localStorage.setItem(key, val);
+            else localStorage.removeItem(key); // vide = on supprime
+
+            // ✅ AJOUT ICI : synchro avec le buffer
+            workoutBuffer.exercises[exerciseIndex].sets[idx].note = val;
+
+            noteRow.style.display = 'none';
+          });
+
+
+
+          row.appendChild(left);
+          row.appendChild(poids);
+          row.appendChild(reps);
+          row.appendChild(note);
+
+    
+
+          // ⬇️ PUIS JUSTE APRÈS
+          block.appendChild(row);
+          block.appendChild(noteRow);
+        });
+      }
+
+            content.appendChild(block);
+            }); // <-- ferme (json.data || []).forEach(exo => { ... })
+
+            // ✅ Bouton fin de séance (envoi seulement ici)
+            const finishBtn = document.createElement('button');
+            finishBtn.type = 'button';
+            finishBtn.textContent = 'Séance terminée';
+            finishBtn.className = 'primary'; // si tu as déjà ce style
+            finishBtn.style.width = '100%';
+            finishBtn.style.marginTop = '14px';
+
+           finishBtn.onclick = () => {
+             const hasData = workoutBuffer.exercises.some(exo =>
+               exo.sets.some(s =>
+                 (s.weight !== '' && s.weight != null) ||
+                 (s.reps !== '' && s.reps != null) ||
+                 ((s.note || '').trim() !== '')
+               )
+             );
+
+             if (!hasData) {
+               alert('Aucune série renseignée.');
+               return;
+             }
+
+             // ✅ empêcher double-clic
+             finishBtn.disabled = true;
+             finishBtn.style.opacity = '0.7';
+
+             sendWorkoutBuffer(workoutBuffer, function (err, res) {
+               console.log('sendWorkoutBuffer result =', { err: err, res: res });
+
+               if (err) {
+                 finishBtn.disabled = false;
+                 finishBtn.style.opacity = '1';
+                 alert('Erreur envoi : ' + err);
+                 return;
+               }
+
+               // ✅ 1) LOCK la séance (clé calculée dans openWorkoutSession : lockKey)
+               try {
+                 localStorage.setItem(lockKey, '1');
+               } catch (e) {}
+
+               // ✅ 2) refresh la liste (pour appliquer le grisé)
+               try {
+                 loadWorkoutSessions();
+               } catch (e) {}
+
+               // ✅ 3) retour accueil
+               alert('Séance envoyée ✅');
+               goToTab(1);
+             });
+           };
+
+
+           content.appendChild(finishBtn);
+
+           } catch (e) {
+             console.error(e);
+             if (metaEl) metaEl.textContent = 'Erreur';
+             if (content) content.innerHTML = '<div class="note">Erreur de chargement.</div>';
+           }
+           } // <-- ferme openWorkoutSession
+
+    function renderWorkoutContent(json, content, metaEl, sessionNum) {
+      if (metaEl) {
+        metaEl.style.display = '';
+        metaEl.textContent = 'Séance ' + sessionNum;
+      }
+
+      if (content) content.innerHTML = '';
+
+      json.exercises.forEach((exo, idx) => {
+        const block = document.createElement('div');
+        block.className = 'card panel-anim';
+        block.style.animationDelay = (idx * 0.05) + 's';
+        block.style.marginTop = '12px';
+
+        // Ici tu colleras tout le contenu (block.innerHTML = ...) 
+        // que tu as déjà dans ta boucle actuelle.
+
+        content.appendChild(block);
+      });
+    }
+
+ 
+
+
+function backToWorkoutSessions() {
+  document.getElementById('workoutSessionView')?.classList.add('hidden');
+  document.getElementById('workoutSessionsGrid')?.classList.remove('hidden');
+}
+
+function openWorkoutTestTab() {
+  // 1) afficher l'onglet programme test
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  const tab = document.getElementById('tab2-workout-test');
+  if (!tab) {
+    console.error('tab2-workout-test introuvable');
+    return;
+  }
+  tab.classList.add('active');
+
+  // 2) charger les séances
+  loadWorkoutSessions();
+}
+
+function closeWorkoutTestTab() {
+  const sessionView = document.getElementById('workoutSessionView');
+
+  // 1) Si on est dans le détail d’une séance → retour à la liste des séances
+  if (sessionView && !sessionView.classList.contains('hidden')) {
+    backToWorkoutSessions();
+    return;
+  }
+
+  // 2) Sinon → retour à TRAINING
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab2-training')?.classList.add('active');
+}
+
+window.closeWorkoutTestTab = closeWorkoutTestTab;
+
+
+function backToWorkoutSessions() {
+  // ici on est DANS le même onglet, donc hidden est OK (ce ne sont pas des .tab)
+  document.getElementById('workoutSessionView')?.classList.add('hidden');
+  document.getElementById('workoutSessionsGrid')?.classList.remove('hidden');
+}
+
+window.openWorkoutTestTab = openWorkoutTestTab;
+window.closeWorkoutTestTab = closeWorkoutTestTab;
+window.backToWorkoutSessions = backToWorkoutSessions;
+
