@@ -137,7 +137,6 @@
 
 
 
-
       <!-- Ancien bloc de démarrage (on le cache au début) -->
       <div id="startPanel" class="hidden">
         <button id="backHomeBtn" class="secondary" onclick="backToHome()">← Retour</button>
@@ -200,73 +199,51 @@
 
 
 
-     <!-- Panneau PROFIL (caché au départ) -->
-     <div id="profilePanel" class="hidden">
-       <button class="secondary" onclick="closeProfile()">← Retour</button>
+    <!-- Panneau PROFIL (caché au départ) -->
+    <div id="profilePanel" class="hidden">
+      <button class="secondary" onclick="closeProfile()">← Retour</button>
 
-       <div class="card profile-card">
-         <h2 class="profile-title">Mon profil</h2>
+      <div class="card profile-card">
+        <h2 class="profile-title">Mon profil</h2>
 
-         <div class="profile-name-row">
-           <span id="profileNameBadge" class="chip">—</span>
-         </div>
+        <div class="profile-name-row">
+          <span id="profileNameBadge" class="chip">—</span>
+        </div>
 
-         <!-- 🧩 GRILLE PRINCIPALE DU PROFIL -->
-         <div class="profile-grid">
-           <!-- Début du coaching : pleine largeur -->
-           <div class="profile-item profile-full">
-             <div class="profile-label">Début du coaching</div>
-             <div id="profileStartDate" class="profile-value">—</div>
-           </div>
+        <!-- 🔹 GRILLE DES INFOS (début coaching + score) -->
+        <div class="profile-grid">
+          <div class="profile-item profile-full">
+            <div class="profile-label">Début du coaching</div>
+            <div id="profileStartDate" class="profile-value">—</div>
+          </div>
 
-           <!-- Score santé -->
-           <div class="profile-item">
-             <div class="profile-label">Score santé</div>
-             <div id="profileHealthScore" class="profile-value">—</div>
-           </div>
+          <div class="profile-item">
+            <div class="profile-label">Semaine</div>
+            <div id="profileWeek" class="profile-value">—</div>
+          </div>
 
-           <!-- Points santé -->
-           <div class="profile-item">
-             <div class="profile-label">Points santé</div>
-             <div id="profileHealthPoints" class="profile-value">— / 100</div>
-           </div>
-         </div>
+          <div class="profile-item">
+            <div class="profile-label">Phase</div>
+            <div id="profilePhase" class="profile-value">—</div>
+          </div>
 
-         <!-- ✅ Barre de points santé sous les blocs -->
-         <div class="profile-health-bar-wrap">
-           <div class="health-bar-container">
-             <div id="healthBar" class="health-bar"></div>
-           </div>
-         </div>
+          <div class="profile-item profile-full">
+            <div class="profile-label">Score santé</div>
+            <div id="profileHealthScore" class="profile-value">—</div>
+          </div>
+        </div> <!-- ✅ fermeture de .profile-grid ICI -->
 
-         <!-- Steps + Distance côte à côte -->
-         <div class="profile-row">
-           <div class="profile-item half">
-             <div class="profile-label">Steps</div>
-             <div id="profileStepsTotal" class="profile-value small">—</div>
-           </div>
+        <!-- 🔹 BARRE DE POINTS SANTÉ EN DESSOUS DE LA GRILLE -->
+        <div class="profile-health-bar-wrap">
+          <div class="health-bar-container">
+            <div id="healthBar" class="health-bar"></div>
+            <div id="healthBarText" class="health-bar-text">— / 100</div>
+          </div>
+        </div>
+      </div> <!-- fin .card profile-card -->
+    </div>   <!-- fin #profilePanel -->
 
-           <div class="profile-item half">
-             <div class="profile-label">Distance</div>
-             <div id="profileDistanceKm" class="profile-value small">—</div>
-           </div>
-         </div>
-       </div>
-
-       <!-- Panneau TO DO LIST (séparé du profil) -->
-       <div id="todoPanel" class="hidden">
-         <button class="secondary" onclick="closeTodo()">← Retour</button>
-         <div class="card">
-           <h2 class="profile-title">To Do List</h2>
-           <p class="note">
-             Espace TODO à configurer (tâches, cases à cocher, etc.).
-           </p>
-         </div>
-       </div>
-     </div>
-
-
-
+    
       </section>
 
             <!-- Sous-page : Nutrition -->
@@ -293,21 +270,65 @@
             </section>
 
 
-            <!-- 🏋️ Sous-onglet TRAINING -->
-            <section id="tab2-training" class="tab hidden">
+          <!-- 🏋️ Sous-onglet TRAINING (menu) -->
+          <section id="tab2-training" class="tab hidden">
 
-              <button class="back" onclick="backFromTraining()">
-                ← Retour
-              </button>
+            <button class="back" onclick="backFromTraining()">
+              ← Retour
+            </button>
 
-              <button class="primary full-btn" onclick="openTrainingSheet()">PROGRAMME</button>
+            <button class="primary full-btn" onclick="openTrainingSheet()">
+              PROGRAMME
+            </button>
 
-            </section>
+            <button class="primary full-btn" onclick="openWorkoutTestTab()" style="margin-top:12px;">
+              🧪 PROGRAMME TEST
+            </button>
 
+          </section>
+
+
+
+         </section>
+
+         <!-- 🧪 Nouvel onglet : PROGRAMME TEST -->
+         <section id="tab2-workout-test" class="tab hidden">
+
+           <!-- 🔙 Bouton retour UNIQUE -->
+           <button class="back" onclick="closeWorkoutTestTab()">
+             ← Retour
+           </button>
+
+
+           <!-- ✅ Grille des boutons séances -->
+           <div id="workoutSessionsGrid" class="workout-sessions-grid"></div>
+
+           <!-- ✅ Vue détail d’une séance (cachée au départ) -->
+           <div id="workoutSessionView" class="hidden">
+
+             <div class="workout-session-head">
+               <div class="workout-badges">
+                 <div id="workoutWeekTitle" class="workout-badge workout-badge-week">Semaine 1</div>
+                 <div id="workoutSessionTitle" class="workout-badge workout-badge-session">Séance 1</div>
+               </div>
+             </div>
+
+             <div id="loadingAnim" style="display: none; width: 100%; height: 180px; justify-content: center; align-items: center;"></div>
+
+             <div id="workoutSessionContent"></div>
+
+           </div>
+
+         </section>
+
+
+
+   
+
+    
 
     <!-- Onglet 2 : menu -->
             <section id="tab2" class="tab">
-              <h2 id="tab2-title" class="section-title home-anim">Mon suivi</h2>
               <div id="tab2-menu" class="dashboard-grid">
                 <button class="tile"
                   onclick="openSleepTile(this)">
