@@ -258,40 +258,6 @@ pre{
   display:block;
 }
 
-
-/* === Titre "Mon suivi" : style final === */
-#tab2-title {
-  background: linear-gradient(180deg, #6EE7FF, #7DFCC2);
-  color: #0f1f3a; /* bleu profond lisible, poli */
-  font-size: 20px;
-  font-weight: 800;
-  text-align: center;
-
-  padding: 14px 0;
-  margin: 0 0 16px 0;
-  width: 100%;
-
-  border-radius: 20px;
-
-  /* 💎 Relief net et premium */
-  box-shadow:
-     0 4px 10px rgba(0,0,0,0.12),   /* ombre large */
-     0 1px 3px rgba(0,0,0,0.18),    /* ombre fine marquée */
-     inset 0 0 6px rgba(255,255,255,0.4); /* lumière interne */
-
-  border: 1px solid rgba(255,255,255,0.55);
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-}
-
-
-
-
-
-
 /* Nutrition — cartes repas */
 .meal-card{
   background: var(--surface);
@@ -694,31 +660,49 @@ pre{
 
 /* === Barre de points santé sous les blocs === */
 
-/* Wrapper pour centrer la barre + espace dessous */
+/* Wrapper pour centrer la barre */
 .profile-health-bar-wrap {
   margin-top: 12px;
-  margin-bottom: 16px;   /* ✅ ajoute l'espace pour que ça ne touche plus les steps */
+  margin-bottom: 16px;
   display: flex;
   justify-content: center;
+  width: 100%;          /* ← prend toute la largeur de la carte */
 }
 
-/* Conteneur de la barre : largeur ≈ 2 blocs */
+
+/* Conteneur de la barre – pleine largeur mais limité pour rester esthétique */
 .health-bar-container {
-  width: 70%;
-  height: 14px;
-  background: #e5e7eb;
+  width: 100%;            /* prend toute la largeur de la carte */
+  max-width: 260px;       /* limite visuelle (adaptable : 240–300px) */
+  height: 14px;           /* hauteur de la jauge */
+  background: #e5e7eb;    /* fond clair */
   border-radius: 20px;
   overflow: hidden;
+  position: relative;     /* permet de centrer un texte si besoin */
 }
 
-/* Barre de remplissage */
+/* Barre verte (remplissage) */
 .health-bar {
   height: 100%;
-  width: 0%; /* mis à jour en JS */
+  width: 0%; /* mis à jour par le JS */
   background: linear-gradient(90deg, #4ade80, #22c55e, #15803d);
   border-radius: 20px;
   transition: width 0.5s ease-in-out;
 }
+
+/* Texte "75 / 100" affiché au centre de la barre */
+.health-bar-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  pointer-events: none;   /* ne bloque pas les interactions */
+}
+
 
 
 /* ==== TITRE SECTION (ex: Mon suivi) ==== */
@@ -1692,26 +1676,25 @@ button.primary:disabled {
 
 #tab2-nutrition .card-header h2 {
   display: block;
-
-  /* largeur réelle identique au bouton Retour */
   width: 100%;
   margin: 0 auto 16px auto;
 
-  /* Dégradé */
-  background: linear-gradient(135deg, #4DA6FF, #A855F7);
-  color: #0f172a;
+  /* ✅ EXACTEMENT le même dégradé que les boutons */
+  background: linear-gradient(135deg, #6EE7FFcc, #7DFCC2cc);
+  color: #0f172a; /* ou blanc si tu préfères plus “bouton” */
+
+
   font-size: 20px;
   font-weight: 800;
   text-align: center;
 
   padding: 14px 0;
+  border-radius: 14px;
 
-  border-radius: 14px;  /* même arrondi visuel que Retour */
-
-  box-shadow:
-    0 8px 18px rgba(15, 23, 42, 0.22),
-    0 0 0 1px rgba(255,255,255,0.25) inset;
+  /* 🟢 plus léger qu’un bouton */
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
 }
+
 
 .question-back {
   margin-bottom: 12px;
@@ -1752,3 +1735,366 @@ button.primary:disabled {
 .profile-full {
   grid-column: 1 / -1 !important;
 }
+
+.health-bar-container {
+  position: relative;
+}
+
+.health-bar-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;         /* adapte si ta barre est claire */
+  pointer-events: none;
+}
+
+/* APLATIR l'empilement de cartes dans le programme test */
+#workoutTestPanel .card .card {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Le gros bouton "← Séances" trop épais */
+#workoutTestPanel button.secondary {
+  padding: 10px 12px !important;
+  margin: 8px 0 10px !important;
+  border-radius: 12px !important;
+}
+
+/* Titre + marges plus compact */
+#workoutTestPanel .profile-title {
+  margin: 0 0 10px 0 !important;
+}
+
+/* Si tu as une "card" exercice : on la rend plus compacte */
+#workoutTestPanel .card {
+  padding: 14px !important;
+}
+
+#workoutTestPanel .card .workout-exo-card,
+#workoutTestPanel .card .exo-card,
+#workoutTestPanel .card .exercise-card {
+  padding: 12px !important;
+  margin: 10px 0 !important;
+  border-radius: 14px !important;
+}
+
+/* ===== FIX OVERFLOW PROGRAMME TEST ===== */
+
+/* Sécurité globale : pas de scroll horizontal */
+html, body {
+  overflow-x: hidden;
+}
+
+/* Le tab TRAINING ne doit jamais dépasser */
+#tab2-training {
+  width: 100%;
+  max-width: 100%;
+  padding-left: 8px;
+  padding-right: 8px;
+  box-sizing: border-box;
+}
+
+/* Panel Programme Test */
+#workoutTestPanel {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Card principale */
+#workoutTestPanel .card {
+  width: 100%;
+  max-width: 100%;
+  margin: 10px auto;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+/* ===== TUILES EXERCICES ===== */
+.workout-exo-tile {
+  background: rgba(255,255,255,0.92);
+  border-radius: 14px;
+  padding: 12px;
+  margin: 10px 0;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.10);
+  border: 1px solid rgba(0,0,0,0.06);
+}
+
+.workout-exo-title{
+  text-align: center;
+  font-weight: 800;
+  font-size: 17px;
+  color: #0f172a;
+  margin: 6px 0 12px;
+}
+
+
+.workout-sets {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  row-gap: 8px;
+  column-gap: 10px;
+}
+
+.workout-set-label {
+  font-weight: 800;
+  opacity: 0.9;
+}
+
+.workout-set-target {
+  opacity: 0.95;
+}
+
+/* ================================
+   PROGRAMME TEST — Séances (UI)
+================================ */
+
+/* Carte globale du programme test (optionnel si tu as déjà .card) */
+.workout-card {
+  max-width: 420px;
+  margin: 0 auto;          /* centre */
+}
+
+/* Grille des boutons séances */
+.workout-sessions-grid {
+  width: 100%;
+  max-width: 420px;
+  margin: 10px auto 0 auto; /* centre */
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  justify-items: stretch;
+}
+
+/* Bouton séance */
+.workout-session-btn {
+  width: 100%;
+  padding: 10px 8px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: .2px;
+  text-align: center;
+  cursor: pointer;
+
+  /* Dégradé "theme app" */
+  background: linear-gradient(135deg, #6EE7FFcc, #7DFCC2cc);
+  color: #0f172a;
+
+  box-shadow:
+    0 8px 18px rgba(15, 23, 42, 0.14),
+    0 0 0 1px rgba(255,255,255,0.35) inset;
+
+  transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+}
+
+.workout-session-btn:active {
+  transform: translateY(1px) scale(0.98);
+  box-shadow:
+    0 6px 14px rgba(15, 23, 42, 0.12),
+    0 0 0 1px rgba(255,255,255,0.35) inset;
+}
+
+.workout-session-btn:focus {
+  outline: none;
+}
+
+/* Responsive: sur petits écrans, 2 colonnes */
+@media (max-width: 360px) {
+  .workout-sessions-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Cards d'exercices : plus denses */
+.workout-exo-card {
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 14px;
+}
+
+
+/* ===== WORKOUT TEST : utiliser plus de largeur utile (SAFE) ===== */
+
+/* 0) Sécurité : évite les débordements causés par padding/width */
+#tab2-workout-test,
+#tab2-workout-test * {
+  box-sizing: border-box;
+}
+
+/* 1) Section (fond bleu) : padding léger et symétrique */
+#tab2-workout-test {
+  padding: 10px;
+}
+
+/* 2) Grande tuile blanche : pleine largeur MAIS centrée, sans overflow */
+#tab2-workout-test .card {
+  width: 100%;
+  max-width: 100%;     /* ✅ surtout PAS none, sinon risque overflow */
+  margin: 0 auto;      /* ✅ centre proprement */
+  padding: 12px;       /* compact */
+}
+
+/* 3) Si ton titre + contenu sont dans des blocs internes, on réduit les espaces */
+#tab2-workout-test .profile-title {
+  margin: 6px 0 10px;
+}
+
+/* 4) Les tuiles d'exercice : plus compactes */
+.workout-exo-card {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+/* 5) (Optionnel mais recommandé) : si un enfant force un dépassement */
+#tab2-workout-test .card,
+.workout-exo-card {
+  overflow: hidden;
+}
+
+/* ===== WORKOUT TEST : Semaine / Séance ===== */
+
+#tab2-workout-test .workout-session-head{
+  display:flex;
+  justify-content:center;
+  margin: 12px 0 16px;
+}
+
+/* conteneur vertical */
+#tab2-workout-test .workout-badges{
+  width: 100%;
+  display:flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* base badge */
+#tab2-workout-test .workout-badge{
+  border-radius: 999px;
+  font-weight: 900;
+  letter-spacing: .2px;
+  line-height: 1;
+  user-select: none;
+  box-shadow:
+    0 10px 20px rgba(15, 23, 42, 0.14),
+    0 0 0 1px rgba(255,255,255,0.35) inset;
+}
+
+/* ===== SEMAINE (même arrondi que bouton Retour) ===== */
+#tab2-workout-test .workout-badge-week {
+  width: 100%;
+  text-align: center;
+
+  background: linear-gradient(135deg, #6EE7FFcc, #7DFCC2cc);
+  color: #0f172a;
+
+  font-size: 18px;
+  font-weight: 900;
+
+  padding: 14px 0;
+
+  border-radius: 14px; /* 👈 IDENTIQUE au bouton Retour */
+
+  box-shadow:
+    0 8px 18px rgba(15, 23, 42, 0.22),
+    0 0 0 1px rgba(255,255,255,0.25) inset;
+}
+
+
+/* ===== SÉANCE (chip discrète, propre) ===== */
+#tab2-workout-test .workout-badge-session{
+  background: rgba(255, 255, 255, 0.55);
+  color: #0f172a;
+
+  font-size: 12px;
+  font-weight: 800;
+
+  padding: 8px 14px;
+  border-radius: 999px;
+
+  text-transform: none;          /* évite le look agressif */
+  letter-spacing: .3px;
+
+  border: 1px solid rgba(15, 23, 42, 0.08);  /* bord subtil */
+  box-shadow: none;              /* IMPORTANT : stop l’effet “bouton” */
+}
+
+/* Header semaine + séance */
+.workout-head{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin:10px 0 14px;
+}
+
+.workout-pill{
+  border-radius:14px; /* même arrondi que Retour */
+  padding:12px 14px;
+  font-weight:900;
+  text-align:center;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(255,255,255,0.25) inset;
+}
+.workout-pill-week{
+  background: linear-gradient(135deg, #6EE7FFcc, #7DFCC2cc);
+  color:#0f172a;
+}
+.workout-pill-session{
+  background:#ffffffcc;
+  color:#0f172a;
+  font-weight:800;
+}
+
+/* Exercice = tuile */
+.workout-exo-card{
+  background:#fff;
+  border-radius:16px;
+  border:1px solid rgba(15,23,42,0.10);
+  padding:14px;
+  margin:12px 0;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.10);
+}
+
+/* Titre centré */
+.workout-exo-title{
+  font-weight:900;
+  font-size:18px;
+  text-align:center;
+  margin-bottom:10px;
+}
+
+/* Lignes de séries */
+.workout-sets{
+  border-top:1px solid rgba(15,23,42,0.06);
+  margin-top:8px;
+  padding-top:6px;
+}
+.workout-set-row{
+  display:grid;
+  grid-template-columns:70px 1fr;
+  gap:8px;
+  align-items:center;
+  padding:10px 0;
+  border-bottom:1px solid rgba(15,23,42,0.06);
+}
+.workout-set-row:last-child{ border-bottom:none; }
+
+.workout-set-left{
+  font-weight:900;
+}
+.workout-set-right{
+  text-align:center;
+  opacity:0.95;
+}
+
